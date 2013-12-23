@@ -29,11 +29,13 @@ Files in this directory:
 ------------------------
 
 doc/MetrologyDBProposal [.docx .pdf] Draft documentation of the project.
+
 data/dabam-<N>.dat  datafile fir the Nth entry.
+
 data/dabam-<N>.txt  metadata file for the Nth entry.
+
 code/dabam.py  python program to access and manipulate the datafiles.  
 code/makemetadata.py an auxiliary (not needed) python script to help creating 
     metadata files. 
-
 
 

@@ -12,6 +12,7 @@ dabam: (dataBase for metrology)
        MODIFICATION HISTORY:
            20130902 srio@esrf.eu, written
            20131109 srio@esrf.eu, added command line arguments, access metadata
+           20131223 srio@esrf.eu, added multi-column support
 
 """
 
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     #
     # define default aparameters taken from command arguments
     #
-    parser = argparse.ArgumentParser(description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/dabam/Readme.md")
+    parser = argparse.ArgumentParser(description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/DabamFiles/readme.txt")
     # main argument
     parser.add_argument('entryNumber', nargs='?', metavar='N', type=int, default=0,
         help='an integer indicating the DABAM entry number')
@@ -183,7 +184,13 @@ if __name__ == '__main__':
         help='Define the root for output files. Default is "tmp".')
 
     parser.add_argument('-D', '--polDegree', default=1, 
-        help='degree of plynomial for detrending. Default=1')
+        help='degree of plynomial for detrending (<0 to skip). Default=1')
+
+    parser.add_argument('-X', '--Xcol', default=1, 
+        help='Index of abscissas column. Default=1')
+
+    parser.add_argument('-Y', '--Ycol', default=-1, 
+        help='Index of abscissas column. Default=-1 (last one)')
 
     parser.add_argument('-B', '--calcBoundaries', action='store_true', 
         help='if set, calculate specular-diffuse scattering boundary.')
@@ -224,34 +231,40 @@ if __name__ == '__main__':
     input_option = args.entryNumber  
 
     remoteAccess = 1  # 0=Local file, 1=Remote file
-    if input_option == 0:
+
+    if args.localFileRoot != None:
         remoteAccess = 0 
         inFileRoot = args.localFileRoot 
+
+    #if input_option == 0:
+    #    remoteAccess = 0 
+    #    inFileRoot = args.localFileRoot 
 
     #;
     #; load file with slopes 
     #;
-    inFileRoot = 'dabam-'+str(input_option)
-    inFileDat = inFileRoot+'.dat'
-    inFileTxt = inFileRoot+'.txt'
     if remoteAccess:  
-        myServer = 'http://ftp.esrf.eu/pub/scisoft/dabam/data/'
+        inFileRoot = 'dabam-'+str(input_option)
+        inFileDat = inFileRoot+'.dat'
+        inFileTxt = inFileRoot+'.txt'
+        myServer = 'http://ftp.esrf.eu/pub/scisoft/DabamFiles/'
+        print ("Accessing remote file: "+inFileDat)
         # metadata
-        myfileurl = myServer+inFileTxt
+        inFileTxtLong = myServer+inFileTxt
         try:
-            u = urllib2.urlopen(myfileurl)
+            u = urllib2.urlopen(inFileTxtLong)
         except:
-            print ("Error accesing remote file: "+myfileurl+" does not exist.")
+            print ("Error accesing remote file: "+inFileTxtLong+" does not exist.")
             sys.exit()
 
         h = json.load(u) # dictionnary with metadata
 
         # data 
-        myfileurl = myServer+inFileDat
+        inFileDatLong = myServer+inFileDat
         try:
-            u = urllib2.urlopen(myfileurl)
+            u = urllib2.urlopen(inFileDatLong)
         except:
-            print ("Error accesing remote file: "+myfileurl+" does not exist.")
+            print ("Error accesing remote file: "+inFileDatLong+" does not exist.")
             sys.exit()
 
         s = StringIO.StringIO( u.read() )
@@ -259,33 +272,47 @@ if __name__ == '__main__':
         a = numpy.loadtxt(s, skiprows=skipLines )
 
     else:
-        with open(inFileTxt, mode='r') as f1: 
+        inFileTxtLong = inFileRoot+".txt"
+        inFileDatLong = inFileRoot+".dat"
+        print ("Accessing remote file: "+inFileTxtLong)
+        with open(inFileTxtLong, mode='r') as f1: 
             h = json.load(f1)
         skipLines = h['FILE_HEADER_LINES']
-        a = numpy.loadtxt(inFileDat, skiprows=skipLines) #, dtype="float64" )
+        a = numpy.loadtxt(inFileDatLong, skiprows=skipLines) #, dtype="float64" )
+
+    #; define the column-index with abscissas and ordinates.
+    xcol = int(args.Xcol)-1
+    if xcol < 0:
+       xcol = a.shape[1] + xcol
+    ycol = int(args.Ycol)
+    if ycol < 0:
+       ycol = a.shape[1] + ycol
+    else:
+       ycol = ycol -1
 
     #;
     #; convert to SI units (m,rad)
     #;
-    a[:,0] = a[:,0]*h['X1_FACTOR']
-    a[:,1] = a[:,1]*h['Y1_FACTOR']
+    a[:,xcol] = a[:,xcol]*h['X1_FACTOR']
+    a[:,ycol] = a[:,ycol]*h['Y'+str(ycol)+'_FACTOR']
     #; apply multiplicative factor
     if (args.multiply != 1.0):
-        a[:,1] = a[:,1]  * float(args.multiply)
+        a[:,ycol] = a[:,ycol]  * float(args.multiply)
         
     #;
     #; Detrending:
     #; substract linear fit to the slopes (remove best circle from profile)
     #;
     
-    sy = a[:,0]
-    sz = a[:,1]
-    coeffs = numpy.polyfit(sy, sz, args.polDegree)
-    pol = numpy.poly1d(coeffs)
-    zfit = pol(sy)
-    sz1 = numpy.copy(sz)
-    sz = sz - zfit
-    a[:,1] = sz
+    sy = a[:,xcol]
+    sz = a[:,ycol]
+    sz1 = numpy.copy(sz)  # keep a copy (undetrended)
+    if int(args.polDegree) >= 0:
+        coeffs = numpy.polyfit(sy, sz, args.polDegree)
+        pol = numpy.poly1d(coeffs)
+        zfit = pol(sy)
+        sz = sz - zfit
+        a[:,ycol] = sz
     
     
     #;
@@ -406,20 +433,23 @@ if __name__ == '__main__':
     #; 
     #
     print ('\n---------- profile results --------------------')
-    print ('Data File: '+inFileDat)
-    print ('Metadata File: '+inFileTxt)
-    if args.polDegree == 1:
+    print ('Data File: %s, Cols: %d,%d'%(inFileDatLong,xcol+1,ycol+1))
+    print ('Metadata File: %s'%inFileTxtLong)
+    if int(args.polDegree) < 0:
+       print ('No detrending applied')
+    elif int(args.polDegree) == 1:
        print ('Linear fit coefficients: '+repr(coeffs))
+       print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
     else:
        print ('Polynomial fit coefficients: '+repr(coeffs))
-    print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
+
     print ('   ')
-    print ('Slope error s_RMS [micro rad]: '+repr(1e6*sz.std()))
-    print ('                   from PSD: '+repr(1e6*cdfSlopesRMS))
-    print ('Shape error h_RMS [nm]: '+repr(1e9*zprof.std()))
-    print ('            from PSD: '+repr(1e9*cdfProfileRMS))
+    print ('Slope error s_RMS [urad]:           '+repr(1e6*sz.std()))
+    print ('                   from PSD [urad]: '+repr(1e6*cdfSlopesRMS))
+    print ('Shape error h_RMS [nm]:             '+repr(1e9*zprof.std()))
+    print ('            from PSD [nm]:          '+repr(1e9*cdfProfileRMS))
     print ('PV of height profile (before detrend) [nm]: '+repr(  1e9*(zprof1.max()-zprof1.min() )))
-    print ('PV of height profile (after detrend) [nm]: '+repr(  1e9*(zprof.max()-zprof.min() )))
+    print ('PV of height profile (after detrend) [nm]:  '+repr(  1e9*(zprof.max()-zprof.min() )))
     print ('   ')
     if (args.calcBoundaries == True): 
         print ('Diffraction/reflection boundary zones: ')

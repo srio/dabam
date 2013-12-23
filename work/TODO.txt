@@ -1,0 +1,15 @@
+Document kws CALC_RADIUS and CALC_RADIUS_FATCOR
+
+
+PSI data
+========
+-check if M1_1 and M1_4 correspond to the same value
+ If yes, put data in a single file
+-ask for un-detrended data
+-differences in comparisons : 
+                          PSI (text)       PSI(plot)   here
+     M1_1 (dabax-8)       0.67 urad        0.68        0.57
+                          0.276 nm         4.10        4.02
+     M1_4 (dabax-9)       0.61 urad        0.61        0.43
+                          0.41 nm          3.58        3.50
+
