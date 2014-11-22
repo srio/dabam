@@ -1,0 +1,14 @@
+Dear Manuel,
+
+Please find attached a spread sheet with the surface slope metrology data that we obtained with a long flat substrate.
+The fiule contains 4 traces of raw measurements with out any detrending. Because the data correspond to the measurements in the slope domain, the trace offset is just an overall (average) tilt of the optic that should be subtracted. The best fit radii of curvature to a particular trace is larger that 350 km. However, the avaraged direct and flipped measurements provide much smaler curvature (R>500 km). This average trace (the firth trace in the spread sheet) is the final result of measurements as we detrended it by removing the overall offset and the best fit cylindrical shape.
+
+A report on the details of the measurements is also attached. I hope that the report provides enough information to explain the measurements and the results. However, if you need more information, please let me know.
+
+By the way, an appropriate reference to the report is as following:
+
+Ian Lacey, Nikolay A. Artemiev, Simon Morton, and Valeriy V. Yashchuk, “Surface Slope Metrology of BL 8.3.1 M301 mirror substrate with the Upgraded Developmental Long Trace Profiler,” Light Source Beamline Note LSBL-1207 (ALS, Berkeley, February 04, 2014).
+
+With best regards,
+
+Valeriy

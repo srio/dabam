@@ -161,7 +161,17 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
 if __name__ == '__main__':
     
     import argparse # to manage input parameters from command-line argument
-    import StringIO, urllib2  # for remote access
+    from io import StringIO 
+    #import urllib2  # for remote access
+
+    try:
+        # For Python 3.0 and later
+        from urllib.request import urlopen
+    except ImportError:
+        # Fall back to Python 2's urllib2
+        from urllib2 import urlopen
+
+
     import json # for decoding metadata
 
     #
@@ -213,50 +223,75 @@ if __name__ == '__main__':
     #
     #print 'entryNumber is: ',argsdict['entryNumber']," or: ",args.entryNumber
     if (args.verbose == True):
-        print "-----------------------------------------------------"
+        print ("-----------------------------------------------------")
         for i,j in argsdict.items():
-            print "%s = %s" % (i,j)
-        print "-----------------------------------------------------"
+            print ("%s = %s" % (i,j))
+        print ("-----------------------------------------------------")
 
     #; 
     #; inputs
     #; 
-    input_option = args.entryNumber  
+    input_option = args.entryNumber
 
-    remoteAccess = 1  # 0=Local file, 1=Remote file
+    if (args.localFileRoot == None):
+        remoteAccess = 1  # 0=Local file, 1=Remote file
+    else:
+        remoteAccess = 0  # 0=Local file, 1=Remote file
+        inFileRoot = args.localFileRoot
+
     if input_option == 0:
         remoteAccess = 0 
         inFileRoot = args.localFileRoot 
-
+    else:
+        inFileRoot = 'dabam-'+str(input_option)#;
     #;
-    #; load file with slopes 
+    #; load file with slopes
     #;
-    inFileRoot = 'dabam-'+str(input_option)
     inFileDat = inFileRoot+'.dat'
     inFileTxt = inFileRoot+'.txt'
     if remoteAccess:  
         myServer = 'http://ftp.esrf.eu/pub/scisoft/dabam/data/'
         # metadata
         myfileurl = myServer+inFileTxt
+        myfileurl = myfileurl
+
         try:
-            u = urllib2.urlopen(myfileurl)
+            u = urlopen(myfileurl)
         except:
-            print ("Error accesing remote file: "+myfileurl+" does not exist.")
+            print ("Error accessing remote file: "+myfileurl+" does not exist.")
             sys.exit()
 
-        h = json.load(u) # dictionnary with metadata
+
+        ur = u.read()
+        ur1 = ur.decode(encoding='UTF-8')
+        h = json.loads(ur1) # dictionnary with metadata
 
         # data 
         myfileurl = myServer+inFileDat
         try:
-            u = urllib2.urlopen(myfileurl)
+            u = urlopen(myfileurl)
         except:
-            print ("Error accesing remote file: "+myfileurl+" does not exist.")
+            print ("Error accessing remote file: "+myfileurl+" does not exist.")
             sys.exit()
 
-        s = StringIO.StringIO( u.read() )
+        print()
+
+        ur = u.read()
+        #ur1 = ur.decode(encoding='UTF-8')
         skipLines = h['FILE_HEADER_LINES']
-        a = numpy.loadtxt(s, skiprows=skipLines )
+
+        import sys
+        if sys.version_info[0] == 2:
+            ur = StringIO( unicode(ur) )
+        else:
+            #print("+++++++++++++",ur.decode())
+            #ur = StringIO( ur.decode(encoding='UTF-8') )
+            ur = StringIO( ur.decode(encoding='ASCII') )
+
+        a = numpy.loadtxt(ur, skiprows=skipLines )
+        #print("+++++++++++++",a.shape)
+        #a.shape = (-1,2)
+        #print("+++++++++++++",a.shape)
 
     else:
         with open(inFileTxt, mode='r') as f1: 
@@ -277,15 +312,25 @@ if __name__ == '__main__':
     #; Detrending:
     #; substract linear fit to the slopes (remove best circle from profile)
     #;
-    
-    sy = a[:,0]
-    sz = a[:,1]
+
+    if h['FILE_FORMAT'] == 1:  # slopes in Col2
+        sy = a[:,0]
+        sz = a[:,1]
+        print("Using col1 (mirror coodinate) qnd col2 (slopes)")
+
+    if h['FILE_FORMAT'] == 2:  # heights in Col2
+        sy = a[:,0]
+        #TODO we suppose that data are equally spacied. Think how to generalise
+        sz = numpy.gradient(a[:,1],(sy[1]-sy[0]))
+        print("Using col1 (mirror coodinate) and col2 (heights)")
+
+
     coeffs = numpy.polyfit(sy, sz, args.polDegree)
     pol = numpy.poly1d(coeffs)
     zfit = pol(sy)
     sz1 = numpy.copy(sz)
     sz = sz - zfit
-    a[:,1] = sz
+    ##a[:,1] = sz
     
     
     #;
@@ -406,6 +451,8 @@ if __name__ == '__main__':
     #; 
     #
     print ('\n---------- profile results --------------------')
+    if remoteAccess:
+        print ('Remote directory: '+myServer)
     print ('Data File: '+inFileDat)
     print ('Metadata File: '+inFileTxt)
     if args.polDegree == 1:

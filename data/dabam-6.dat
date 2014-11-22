@@ -1,7 +1,7 @@
 Dim : 220 X 20 X 40 mm3
 Scan lenght : 200 mm
 p=499.14 mm q= 4500 mm teta = 34.99 mrad
-x(mm)	Slope(µrad)	Slope-BestEllipse(µrad)
+x(mm)	Slope(urad)	Slope-BestEllipse(urad)
 -100	-4355.0302	-0.57797
 -99.75	-4341.02017	0.27153
 -99.5	-4327.03045	1.11199

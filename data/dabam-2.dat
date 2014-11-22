@@ -1,7 +1,7 @@
 mirror dimensions: 400mmx70mmx80mm 
 Scan Length = 360 mm
 measurement step = 1mm
-x(mm)	Slope (µrad)
+x(mm)	Slope (urad)
 -180.0000000	-0.3473210
 -179.0000000	-0.3086515
 -178.0000000	-0.4306749

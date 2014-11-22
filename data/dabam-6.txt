@@ -20,7 +20,7 @@
   "SCAN_DATE": "04/21/2010", 
   "PLOT_TITLE_X1": "x(mm)", 
   "PLOT_TITLE_Y1": "Slope (urad)", 
-  "PLOT_TITLE_Y2": "Slope-BestEllipse(µrad)",
+  "PLOT_TITLE_Y2": "Slope-BestEllipse(urad)",
   "CALC_HEIGHT_RMS": null, 
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": null, 
