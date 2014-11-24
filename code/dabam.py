@@ -38,7 +38,7 @@ def cdf(sy, sz, method = 1 ):
                     1 use trapezoidal rule (default)
       RESTRICTIONS:
           the abscissas step must be sorted, but may not be constant 
-      OUTPUTS:
+      
            1D array with cdf
      
     """
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         help='Define the root for output files. Default is "tmp".')
 
     parser.add_argument('-D', '--polDegree', default=1, 
-        help='degree of plynomial for detrending. Default=1')
+        help='degree of polynomial for detrending. To avoid detrending set to -1. Default=1')
 
     parser.add_argument('-B', '--calcBoundaries', action='store_true', 
         help='if set, calculate specular-diffuse scattering boundary.')
@@ -324,12 +324,19 @@ if __name__ == '__main__':
         sz = numpy.gradient(a[:,1],(sy[1]-sy[0]))
         print("Using col1 (mirror coodinate) and col2 (heights)")
 
+    if args.polDegree == '-1':
+        print(">>>>>>>>> None <<<<<<<<<<<",args.polDegree)
+    else:
+        print(">>>>>>>>> Yes <<<<<<<<<<<",args.polDegree)
 
-    coeffs = numpy.polyfit(sy, sz, args.polDegree)
-    pol = numpy.poly1d(coeffs)
-    zfit = pol(sy)
+
     sz1 = numpy.copy(sz)
-    sz = sz - zfit
+
+    if args.polDegree != '-1':
+        coeffs = numpy.polyfit(sy, sz, args.polDegree)
+        pol = numpy.poly1d(coeffs)
+        zfit = pol(sy)
+        sz = sz - zfit
     ##a[:,1] = sz
     
     
@@ -455,11 +462,15 @@ if __name__ == '__main__':
         print ('Remote directory: '+myServer)
     print ('Data File: '+inFileDat)
     print ('Metadata File: '+inFileTxt)
-    if args.polDegree == 1:
-       print ('Linear fit coefficients: '+repr(coeffs))
+    if args.polDegree == '-1':
+       print ('No detrending applied.')
     else:
-       print ('Polynomial fit coefficients: '+repr(coeffs))
-    print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
+        if args.polDegree == 1:
+            print ('Linear fit coefficients: '+repr(coeffs))
+            print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
+        else:
+            print ('Polynomial fit coefficients: '+repr(coeffs))
+
     print ('   ')
     print ('Slope error s_RMS [micro rad]: '+repr(1e6*sz.std()))
     print ('                   from PSD: '+repr(1e6*cdfSlopesRMS))
