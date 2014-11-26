@@ -316,19 +316,13 @@ if __name__ == '__main__':
     if h['FILE_FORMAT'] == 1:  # slopes in Col2
         sy = a[:,0]
         sz = a[:,1]
-        print("Using col1 (mirror coodinate) qnd col2 (slopes)")
+        print("Using col1 (mirror coodinate) and col2 (slopes)")
 
     if h['FILE_FORMAT'] == 2:  # heights in Col2
         sy = a[:,0]
         #TODO we suppose that data are equally spacied. Think how to generalise
         sz = numpy.gradient(a[:,1],(sy[1]-sy[0]))
         print("Using col1 (mirror coodinate) and col2 (heights)")
-
-    if args.polDegree == '-1':
-        print(">>>>>>>>> None <<<<<<<<<<<",args.polDegree)
-    else:
-        print(">>>>>>>>> Yes <<<<<<<<<<<",args.polDegree)
-
 
     sz1 = numpy.copy(sz)
 
@@ -462,6 +456,12 @@ if __name__ == '__main__':
         print ('Remote directory: '+myServer)
     print ('Data File: '+inFileDat)
     print ('Metadata File: '+inFileTxt)
+    print ('SURFACE_SHAPE: '+repr(h['SURFACE_SHAPE']))
+    print ('FACILITY: '+repr(h['FACILITY']))
+    print ('scan length [mm]: '+repr(1e3*(sy[-1]-sy[0])))
+    print ('number of points: '+repr(len(sy)))
+
+    print ('   ')
     if args.polDegree == '-1':
        print ('No detrending applied.')
     else:
@@ -470,12 +470,17 @@ if __name__ == '__main__':
             print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
         else:
             print ('Polynomial fit coefficients: '+repr(coeffs))
+    print ('   ')
+
+
 
     print ('   ')
     print ('Slope error s_RMS [micro rad]: '+repr(1e6*sz.std()))
     print ('                   from PSD: '+repr(1e6*cdfSlopesRMS))
+    print ('                   from USER (metadata): '+repr(h['CALC_SLOPE_RMS']))
     print ('Shape error h_RMS [nm]: '+repr(1e9*zprof.std()))
     print ('            from PSD: '+repr(1e9*cdfProfileRMS))
+    print ('            from USER (metadata): '+repr(h['CALC_HEIGHT_RMS']))
     print ('PV of height profile (before detrend) [nm]: '+repr(  1e9*(zprof1.max()-zprof1.min() )))
     print ('PV of height profile (after detrend) [nm]: '+repr(  1e9*(zprof.max()-zprof.min() )))
     print ('   ')

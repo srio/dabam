@@ -1,0 +1,619 @@
+$ for i in {1..22} ; do python dabam.py  -l ../data/dabam-$i ; done > AllDetrended.txt
+
+
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-1.dat
+Metadata File: ../data/dabam-1.txt
+SURFACE_SHAPE: u'plane'
+FACILITY: u'ESRF'
+scan length [mm]: 1200.0
+number of points: 1201
+   
+Linear fit coefficients: array([  5.46078094e-05,  -2.49791840e-12])
+Radius of curvature [m] : 18312.399111233157
+   
+   
+Slope error s_RMS [micro rad]: 0.48651846141972882
+                   from PSD: 0.32980875952807159
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 43.836191037682632
+            from PSD: 24.724035615907773
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 9895.724000000002
+PV of height profile (after detrend) [nm]: 133.99860964579921
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-2.dat
+Metadata File: ../data/dabam-2.txt
+SURFACE_SHAPE: u'plane'
+FACILITY: u'ESRF'
+scan length [mm]: 360.0
+number of points: 361
+   
+Linear fit coefficients: array([  3.34022358e-06,  -5.26177285e-12])
+Radius of curvature [m] : 299381.1573977262
+   
+   
+Slope error s_RMS [micro rad]: 0.15096270252538352
+                   from PSD: 0.10097094568411281
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 4.4531695553041377
+            from PSD: 2.4405427348911064
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 61.704162650000008
+PV of height profile (after detrend) [nm]: 15.229837715149245
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-3.dat
+Metadata File: ../data/dabam-3.txt
+SURFACE_SHAPE: u'spherical'
+FACILITY: u'ESRF'
+scan length [mm]: 118.00000000000001
+number of points: 591
+   
+Linear fit coefficients: array([  1.07378873e-01,  -1.72556514e-11])
+Radius of curvature [m] : 9.3128189145924214
+   
+   
+Slope error s_RMS [micro rad]: 0.1739444458030501
+                   from PSD: 0.11648916743217015
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 1.5565164634267037
+            from PSD: 0.81227955477981129
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 186894.20080189087
+PV of height profile (after detrend) [nm]: 4.8308474978045748
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-4.dat
+Metadata File: ../data/dabam-4.txt
+SURFACE_SHAPE: u'elliptical'
+FACILITY: u'ESRF'
+scan length [mm]: 32.0
+number of points: 161
+   
+Linear fit coefficients: array([  2.39860132e-02,   1.89923666e-05])
+Radius of curvature [m] : 41.690963393382646
+   
+   
+Slope error s_RMS [micro rad]: 17.193947423590025
+                   from PSD: 8.9465855665298371
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 85.143050412386387
+            from PSD: 42.955030624499393
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 3362.9809058797077
+PV of height profile (after detrend) [nm]: 237.50128261931746
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-5.dat
+Metadata File: ../data/dabam-5.txt
+SURFACE_SHAPE: u'spherical'
+FACILITY: u'SOLEIL'
+scan length [mm]: 429.25
+number of points: 1718
+   
+Linear fit coefficients: array([ 0.02311574, -0.00520132])
+Radius of curvature [m] : 43.260563811230348
+   
+   
+Slope error s_RMS [micro rad]: 0.84197811681222201
+                   from PSD: 0.55353821313081675
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 31.886660197618198
+            from PSD: 16.82693374990976
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 544138.46828750032
+PV of height profile (after detrend) [nm]: 112.04075868873807
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-6.dat
+Metadata File: ../data/dabam-6.txt
+SURFACE_SHAPE: u'Elliptical'
+FACILITY: u'SOLEIL'
+scan length [mm]: 200.0
+number of points: 801
+   
+Linear fit coefficients: array([  3.94573086e-02,  -1.45535225e-05])
+Radius of curvature [m] : 25.34384719004132
+   
+   
+Slope error s_RMS [micro rad]: 159.85811651983713
+                   from PSD: 83.211072028406349
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 4921.9704666815214
+            from PSD: 2483.4582658861868
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 198578.5886062498
+PV of height profile (after detrend) [nm]: 13737.933571739413
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-7.dat
+Metadata File: ../data/dabam-7.txt
+SURFACE_SHAPE: u'Plane'
+FACILITY: u'SOLEIL'
+scan length [mm]: 99.0
+number of points: 100
+   
+Linear fit coefficients: array([ -2.92010267e-06,   8.23103301e-03])
+Radius of curvature [m] : -342453.71238867327
+   
+   
+Slope error s_RMS [micro rad]: 0.5741539159479252
+                   from PSD: 0.40639492981015046
+                   from USER (metadata): None
+Shape error h_RMS [nm]: 0.50463500948015871
+            from PSD: 0.32138903485996184
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 814871.97250000003
+PV of height profile (after detrend) [nm]: 2.6249115232853582
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-8.dat
+Metadata File: ../data/dabam-8.txt
+SURFACE_SHAPE: u'Plane'
+FACILITY: u'PSI'
+scan length [mm]: 97.999999999999972
+number of points: 99
+   
+Linear fit coefficients: array([ -2.48510268e-08,   1.86008277e-08])
+Radius of curvature [m] : -40239785.911972761
+   
+   
+Slope error s_RMS [micro rad]: 0.57147678897188614
+                   from PSD: 0.39592404392512814
+                   from USER (metadata): 0.67
+Shape error h_RMS [nm]: 4.0253733916253118
+            from PSD: 2.5457246098948469
+            from USER (metadata): 0.276
+PV of height profile (before detrend) [nm]: 15.358065471350637
+PV of height profile (after detrend) [nm]: 15.313478913471688
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-9.dat
+Metadata File: ../data/dabam-9.txt
+SURFACE_SHAPE: u'Plane'
+FACILITY: u'PSI'
+scan length [mm]: 97.999999999999972
+number of points: 99
+   
+Linear fit coefficients: array([  1.76021817e-07,  -1.48488783e-07])
+Radius of curvature [m] : 5681113.9386375528
+   
+   
+Slope error s_RMS [micro rad]: 0.43527688789008767
+                   from PSD: 0.29127698940457136
+                   from USER (metadata): 0.61
+Shape error h_RMS [nm]: 3.5035252269255013
+            from PSD: 1.9318084893422349
+            from USER (metadata): 0.41
+PV of height profile (before detrend) [nm]: 12.163754759562552
+PV of height profile (after detrend) [nm]: 12.067733681672747
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-10.dat
+Metadata File: ../data/dabam-10.txt
+SURFACE_SHAPE: u'plane'
+FACILITY: u'LCLS'
+scan length [mm]: 442.68000000000001
+number of points: 435
+   
+Linear fit coefficients: array([  8.55659609e-07,   3.93171062e-08])
+Radius of curvature [m] : 1168689.0319263379
+   
+   
+Slope error s_RMS [micro rad]: 0.23241765005153803
+                   from PSD: 0.15948267043320144
+                   from USER (metadata): 0.232
+Shape error h_RMS [nm]: 6.1917387220178677
+            from PSD: 3.3646805118574457
+            from USER (metadata): 3.048414
+PV of height profile (before detrend) [nm]: 33.892499999999281
+PV of height profile (after detrend) [nm]: 18.703561951388764
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-11.dat
+Metadata File: ../data/dabam-11.txt
+SURFACE_SHAPE: u'plane'
+FACILITY: u'LCLS'
+scan length [mm]: 445.74000000000001
+number of points: 438
+   
+Linear fit coefficients: array([  1.34728900e-06,   5.74224870e-08])
+Radius of curvature [m] : 742231.25343887194
+   
+   
+Slope error s_RMS [micro rad]: 0.22883095949050536
+                   from PSD: 0.15605831535775461
+                   from USER (metadata): 0.2290927
+Shape error h_RMS [nm]: 6.5819082679631409
+            from PSD: 3.4887972013662156
+            from USER (metadata): 3.23343
+PV of height profile (before detrend) [nm]: 43.942499999999121
+PV of height profile (after detrend) [nm]: 19.215653038513288
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-12.dat
+Metadata File: ../data/dabam-12.txt
+SURFACE_SHAPE: u'plane'
+FACILITY: u'LCLS'
+scan length [mm]: 442.0
+number of points: 443
+   
+Linear fit coefficients: array([  7.39329413e-06,   9.70654628e-09])
+Radius of curvature [m] : 135257.7053979327
+   
+   
+Slope error s_RMS [micro rad]: 0.31848792295534739
+                   from PSD: 0.2247247741104309
+                   from USER (metadata): 0.318848
+Shape error h_RMS [nm]: 2.8593349474951086
+            from PSD: 1.7368240068728018
+            from USER (metadata): 2.5052773
+PV of height profile (before detrend) [nm]: 181.07499999999965
+PV of height profile (after detrend) [nm]: 10.914509790578682
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-13.dat
+Metadata File: ../data/dabam-13.txt
+SURFACE_SHAPE: u'spherical'
+FACILITY: u'LCLS'
+scan length [mm]: 114.0
+number of points: 115
+   
+Linear fit coefficients: array([  7.71467569e-04,  -4.36963906e-05])
+Radius of curvature [m] : 1296.2307689671943
+   
+   
+Slope error s_RMS [micro rad]: 1.2899449478710492
+                   from PSD: 0.88351475905569521
+                   from USER (metadata): 1.5106354
+Shape error h_RMS [nm]: 8.931878216234578
+            from PSD: 4.8255709142625474
+            from USER (metadata): 10.857919
+PV of height profile (before detrend) [nm]: 1275.4200000000005
+PV of height profile (after detrend) [nm]: 33.47014542728779
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-14.dat
+Metadata File: ../data/dabam-14.txt
+SURFACE_SHAPE: u'spherical'
+FACILITY: u'LCLS'
+scan length [mm]: 240.0
+number of points: 241
+   
+Linear fit coefficients: array([ 0.01201717, -0.00143605])
+Radius of curvature [m] : 83.214255028501739
+   
+   
+Slope error s_RMS [micro rad]: 1.1432193606225252
+                   from PSD: 0.76042937942641076
+                   from USER (metadata): 1.0503953
+Shape error h_RMS [nm]: 23.234016666851197
+            from PSD: 12.682581113730013
+            from USER (metadata): 15.372782
+PV of height profile (before detrend) [nm]: 87293.10000000002
+PV of height profile (after detrend) [nm]: 86.956395048144984
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-15.dat
+Metadata File: ../data/dabam-15.txt
+SURFACE_SHAPE: u'toroidal'
+FACILITY: u'LCLS'
+scan length [mm]: 800.0
+number of points: 801
+   
+Linear fit coefficients: array([  8.63029597e-05,  -3.52005203e-05])
+Radius of curvature [m] : 11587.088135523272
+   
+   
+Slope error s_RMS [micro rad]: 2.1297554130432643
+                   from PSD: 1.3838591719132998
+                   from USER (metadata): 97.355965
+Shape error h_RMS [nm]: 170.76413506439766
+            from PSD: 94.05146761522353
+            from USER (metadata): 2.126065
+PV of height profile (before detrend) [nm]: 6949.0250000000287
+PV of height profile (after detrend) [nm]: 594.32646005887773
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-16.dat
+Metadata File: ../data/dabam-16.txt
+SURFACE_SHAPE: u'toroidal'
+FACILITY: u'LCLS'
+scan length [mm]: 239.00000000000003
+number of points: 240
+   
+Linear fit coefficients: array([ 0.00216831, -0.00025802])
+Radius of curvature [m] : 461.18910364937341
+   
+   
+Slope error s_RMS [micro rad]: 1.8447156600570895
+                   from PSD: 1.0978909155212411
+                   from USER (metadata): 1.863797
+Shape error h_RMS [nm]: 54.667074497357731
+            from PSD: 27.68357125376793
+            from USER (metadata): 36.539151
+PV of height profile (before detrend) [nm]: 15604.435000000029
+PV of height profile (after detrend) [nm]: 173.36272415319405
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (heights)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-17.dat
+Metadata File: ../data/dabam-17.txt
+SURFACE_SHAPE: u'toroidal'
+FACILITY: u'LCLS'
+scan length [mm]: 495.0
+number of points: 496
+   
+Linear fit coefficients: array([  2.40352516e-04,  -5.93830663e-05])
+Radius of curvature [m] : 4160.5555737200539
+   
+   
+Slope error s_RMS [micro rad]: 2.2715775271373948
+                   from PSD: 1.588375910207755
+                   from USER (metadata): 2.4019323
+Shape error h_RMS [nm]: 61.478156666933707
+            from PSD: 38.802198119859192
+            from USER (metadata): 47.577432
+PV of height profile (before detrend) [nm]: 7405.550500000013
+PV of height profile (after detrend) [nm]: 266.92642200490883
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-18.dat
+Metadata File: ../data/dabam-18.txt
+SURFACE_SHAPE: u'cylindrical'
+FACILITY: u'Helmholtz Zentrum Berlin'
+scan length [mm]: 330.0
+number of points: 661
+   
+Linear fit coefficients: array([  4.08817530e-05,  -6.74548911e-06])
+Radius of curvature [m] : 24460.790621933589
+   
+   
+Slope error s_RMS [micro rad]: 0.11878208663183118
+                   from PSD: 0.083778318753692585
+                   from USER (metadata): 0.12
+Shape error h_RMS [nm]: 1.8306986214021581
+            from PSD: 1.2556747924287386
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 558.9148718699995
+PV of height profile (after detrend) [nm]: 7.3946632321939481
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-19.dat
+Metadata File: ../data/dabam-19.txt
+SURFACE_SHAPE: u'elliptical'
+FACILITY: u'Helmholtz Zentrum Berlin'
+scan length [mm]: 350.00000000000006
+number of points: 1751
+   
+Linear fit coefficients: array([  1.89842635e-04,  -3.39112671e-08])
+Radius of curvature [m] : 5267.520643474787
+   
+   
+Slope error s_RMS [micro rad]: 0.13701957770896134
+                   from PSD: 0.072756078146559447
+                   from USER (metadata): 0.06
+Shape error h_RMS [nm]: 7.1595945071241047
+            from PSD: 3.5934271640811484
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 11615.95466396841
+PV of height profile (after detrend) [nm]: 20.133025971217656
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-20.dat
+Metadata File: ../data/dabam-20.txt
+SURFACE_SHAPE: u'elliptical'
+FACILITY: u'Helmholtz Zentrum Berlin'
+scan length [mm]: 121.50000000000001
+number of points: 244
+   
+Linear fit coefficients: array([-0.06593219,  0.00513941])
+Radius of curvature [m] : -15.16709885694387
+   
+   
+Slope error s_RMS [micro rad]: 153.14255609791977
+                   from PSD: 79.812292026191898
+                   from USER (metadata): 0.5
+Shape error h_RMS [nm]: 2874.9501193585211
+            from PSD: 1453.368433318218
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 153491.52061649403
+PV of height profile (after detrend) [nm]: 8022.5693880735744
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-21.dat
+Metadata File: ../data/dabam-21.txt
+SURFACE_SHAPE: u'elliptical'
+FACILITY: u'Helmholtz Zentrum Berlin'
+scan length [mm]: 430.0
+number of points: 2151
+   
+Linear fit coefficients: array([-0.0028274 ,  0.00060786])
+Radius of curvature [m] : -353.6816022140905
+   
+   
+Slope error s_RMS [micro rad]: 7.9491187193330566
+                   from PSD: 4.1246387411659891
+                   from USER (metadata): 0.5
+Shape error h_RMS [nm]: 527.35430776934697
+            from PSD: 265.88318752641624
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 65363.59374952787
+PV of height profile (after detrend) [nm]: 1474.0585413752142
+   
+-------------------------------------------------
+
+ 
+Using col1 (mirror coodinate) and col2 (slopes)
+File tmpProfile.dat written to disk. Cols: coordinate (m), height (m).
+File tmpPSD.dat written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).
+
+---------- profile results --------------------
+Data File: ../data/dabam-22.dat
+Metadata File: ../data/dabam-22.txt
+SURFACE_SHAPE: u'cylindrical'
+FACILITY: u'Helmholtz Zentrum Berlin'
+scan length [mm]: 1130.0000000000002
+number of points: 2261
+   
+Linear fit coefficients: array([-0.0001699 ,  0.00021605])
+Radius of curvature [m] : -5885.9625541910054
+   
+   
+Slope error s_RMS [micro rad]: 5.3156037926371154
+                   from PSD: 3.6043867910233924
+                   from USER (metadata): 5.0
+Shape error h_RMS [nm]: 400.73184134616304
+            from PSD: 208.59243080157893
+            from USER (metadata): None
+PV of height profile (before detrend) [nm]: 135665.04309773524
+PV of height profile (after detrend) [nm]: 1288.3690184381408
+   
+-------------------------------------------------
+
+ 
