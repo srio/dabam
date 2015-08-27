@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+<meta http-equiv="keywords" content="DABAM" />
+<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+<meta http-equiv="description" content="DABAM" />
+<link href="/notes/css/style.css" rel="stylesheet" type="text/css" />
+<title>DABAM</title>
+    <title>Example form</title>
+    <style type="text/css">
+    .container {
+        width: 200px;
+        clear: both;
+    }
+    .container input {
+        width: 100%;
+        clear: both;
+    }
+
+    </style>
+</head>
+<body>
+
+<!--
+{
+  "FILE_FORMAT": 1, 
+  "FILE_HEADER_LINES": 4, 
+  "X1_FACTOR": 0.001, 
+  "Y1_FACTOR": 1e-06, 
+  "YEAR_FABRICATION": null, 
+  "SURFACE_SHAPE": "plane", 
+  "FUNCTION": null, 
+  "LENGTH": 1.36, 
+  "WIDTH": 0.16, 
+  "THICK": 0.05, 
+  "LENGTH_OPTICAL": 1.2, 
+  "SUBSTRATE": "silicon", 
+  "COATING": null, 
+  "FACILITY": "ESRF", 
+  "INSTRUMENT": null, 
+  "POLISHING": null, 
+  "ENVIRONMENT": null, 
+  "SCAN_DATE": null, 
+  "PLOT_TITLE_X1": "x(mm)", 
+  "PLOT_TITLE_Y1": "Slope (urad)", 
+  "CALC_HEIGHT_RMS": null, 
+  "CALC_HEIGHT_RMS_FACTOR": null, 
+  "CALC_SLOPE_RMS": null, 
+  "CALC_SLOPE_RMS_FACTOR": null, 
+  "USER_EXAMPLE": "This is an example of user keyword"
+}
+-->
+
+<div align="center">
+<form method="POST" action="upload_file.php" enctype="multipart/form-data">
+<pre>
+Fileformat <select id="cmbFileformat" name="FILE_FORMAT">
+     <option value="1">Slope</option>
+     <option value="2">Height</option>
+</select><br />
+
+<label>FILE_HEADER_LINES
+<INPUT TYPE = "Number" VALUE ="4" NAME = "FILE_HEADER_LINES">
+</label>
+<label>X1_FACTOR
+<INPUT TYPE = "Text" VALUE ="0.001" NAME = "X1_FACTOR">
+</label>
+<label>
+Y1_FACTOR
+<INPUT TYPE = "Text" VALUE ="1e-06" NAME = "Y1_FACTOR">
+</label>
+<label>
+YEAR_FABRICATION
+<INPUT TYPE = "Text" VALUE ="" NAME = "YEAR_FABRICATION"> 
+</label>
+<label>
+Fileformat 
+<select id="SURFACE_SHAPE" name="SURFACE_SHAPE">
+     <option value="plane">Plane</option>
+</select>
+</label>
+<label>
+FUNCTION
+<INPUT TYPE = "Text" VALUE ="" NAME = "FUNCTION"> 
+</label>
+<label>
+LENGTH
+<INPUT TYPE = "Text" VALUE ="1.36" NAME = "LENGTH"> 
+</label>
+<label>
+WIDTH
+<INPUT TYPE = "Text" VALUE ="0.16" NAME = "WIDTH"> 
+</label>
+<label>
+THICK
+<INPUT TYPE = "Text" VALUE ="0.05" NAME = "THICK"> 
+</label>
+<label>
+LENGTH_OPTICAL
+<INPUT TYPE = "Text" VALUE ="1.2" NAME = "LENGTH_OPTICAL"> 
+</label>
+<label>
+SUBSTRATE
+<select id="SUBSTRATE" name="SUBSTRATE">
+     <option value="silicon">Silicon</option>
+</select>
+</label>
+<label>
+COATING
+<INPUT TYPE = "Text" VALUE ="" NAME = "COATING">
+<label>
+FACILITY
+<select id="FACILITY" name="FACILITY">
+     <option value="ESRF">ESRF</option>
+</select>
+</label>
+<label>
+INSTRUMENT
+<INPUT TYPE = "Text" VALUE ="" NAME = "INSTRUMENT">
+</label>
+<label>
+POLISHING
+<INPUT TYPE = "Text" VALUE ="" NAME = "POLISHING">
+</label>
+<label>
+ENVIRONMENT
+<INPUT TYPE = "Text" VALUE ="" NAME = "ENVIRONMENT">
+</label>
+<label>
+SCAN_DATE
+<INPUT TYPE = "Text" VALUE ="" NAME = "SCAN_DATE">
+</label>
+<label>
+PLOT_TITLE_X1
+<INPUT TYPE = "Text" VALUE ="x(mm)" NAME = "PLOT_TITLE_X1">
+</label>
+<label>
+PLOT_TITLE_Y1
+<INPUT TYPE = "Text" VALUE ="Slope (urad)" NAME = "PLOT_TITLE_Y1">
+</label>
+<label>
+CALC_HEIGHT_RMS
+<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_HEIGHT_RMS">
+</label>
+<label>
+CALC_HEIGHT_RMS_FACTOR
+<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_HEIGHT_RMS_FACTOR">
+</label>
+<label>
+CALC_SLOPE_RMS
+<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_SLOPE_RMS">
+</label>
+<label>
+CALC_SLOPE_RMS_FACTOR
+<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_SLOPE_RMS_FACTOR">
+</label>
+<label>
+USER_EXAMPLE
+<INPUT TYPE = "Text" VALUE ="This is an example of user keyword" NAME = "USER_EXAMPLE">
+</label>
+<label>
+Filename
+<input type="file" name="dabamfile" id="dabamfile"><br>
+</label>
+<input type="submit" name="Submit" value="Submit"/>
+</form>
+</div>
+
+</html>
+</body>
+</html>
