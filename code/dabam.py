@@ -17,7 +17,7 @@ dabam: (dataBase for metrology)
 
 __author__ = "Manuel Sanchez del Rio"
 __contact__ = "srio@esrf.eu"
-__copyright = "ESRF, 2013"
+__copyright = "ESRF, 2013-2015"
 
 
 import numpy
@@ -132,14 +132,14 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
     out = 1
 
     try:
-       fs = open(outFile, 'wb')
+       fs = open(outFile, 'w')
     except IOError:
        out = 0
        print ("Error: can\'t open file: "+outFile)
        return 
     else:
         # dimensions
-        fs.write( repr(xx.size)+" "+repr(yy.size)+" \n" ) 
+        fs.write( "%d  %d \n"%(xx.size,yy.size))
         # y array
         for i in range(yy.size): 
             fs.write(' ' + repr(yy[i]) )
@@ -154,25 +154,8 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
         fs.close()
         print ("File for SHADOW "+outFile+" written to disk.")
 
-
-#
-# main program
-# 
-if __name__ == '__main__':
-    
+def get_arguments():
     import argparse # to manage input parameters from command-line argument
-    from io import StringIO 
-    #import urllib2  # for remote access
-
-    try:
-        # For Python 3.0 and later
-        from urllib.request import urlopen
-    except ImportError:
-        # Fall back to Python 2's urllib2
-        from urllib2 import urlopen
-
-
-    import json # for decoding metadata
 
     #
     # define default aparameters taken from command arguments
@@ -182,20 +165,20 @@ if __name__ == '__main__':
     parser.add_argument('entryNumber', nargs='?', metavar='N', type=int, default=0,
         help='an integer indicating the DABAM entry number')
     # options
-    parser.add_argument('-v', '--verbose', action='store_true',  
+    parser.add_argument('-v', '--verbose', action='store_true',
         help='print some debugging messages. Default is No')
 
-    parser.add_argument('-l', '--localFileRoot', 
+    parser.add_argument('-l', '--localFileRoot',
         help='Define the name of local DABAM file root '+
         '(<name>.dat for data, <name>.txt for metadata).'+
         ' If undefined use remote file')
-    parser.add_argument('-r', '--rootFile', default='tmp', 
+    parser.add_argument('-r', '--rootFile', default='tmp',
         help='Define the root for output files. Default is "tmp".')
 
-    parser.add_argument('-D', '--polDegree', default=1, 
+    parser.add_argument('-D', '--polDegree', default=1,
         help='degree of polynomial for detrending. To avoid detrending set to -1. Default=1')
 
-    parser.add_argument('-B', '--calcBoundaries', action='store_true', 
+    parser.add_argument('-B', '--calcBoundaries', action='store_true',
         help='if set, calculate specular-diffuse scattering boundary.')
     parser.add_argument('-H', '--histoCalc', action='store_true',
         help='if set, calculate histograms.')
@@ -213,24 +196,37 @@ if __name__ == '__main__':
     parser.add_argument('-m','--multiply', default=1.0,
         help='Multiply input (slope) by this number (to play with RMS values). Default=1.0')
 
+    parser.add_argument('-S', '--useHeightsOrSlopes', default=-1,
+        help='using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=1')
+
+    parser.add_argument('-A', '--useAbscissasColumn', default=0,
+        help='using abscissas column index. Default=0')
+
+    parser.add_argument('-O', '--useOrdinatesColumn', default=1,
+        help='using ordinates column index. Default=1')
 
     args = parser.parse_args()
-    argsdict = vars(args)
+
+    return args
+
+def get_metadata_and_data(args):
+    from io import StringIO
+    #import urllib2  # for remote access
+
+    try:
+        # For Python 3.0 and later
+        from urllib.request import urlopen
+    except ImportError:
+        # Fall back to Python 2's urllib2
+        from urllib2 import urlopen
 
 
-    #
-    # list all keywords
-    #
-    #print 'entryNumber is: ',argsdict['entryNumber']," or: ",args.entryNumber
-    if (args.verbose == True):
-        print ("-----------------------------------------------------")
-        for i,j in argsdict.items():
-            print ("%s = %s" % (i,j))
-        print ("-----------------------------------------------------")
+    import json # for decoding metadata
 
-    #; 
+
+    #;
     #; inputs
-    #; 
+    #;
     input_option = args.entryNumber
 
     if (args.localFileRoot == None):
@@ -240,8 +236,8 @@ if __name__ == '__main__':
         inFileRoot = args.localFileRoot
 
     if input_option == 0:
-        remoteAccess = 0 
-        inFileRoot = args.localFileRoot 
+        remoteAccess = 0
+        inFileRoot = args.localFileRoot
     else:
         inFileRoot = 'dabam-'+str(input_option)#;
     #;
@@ -249,7 +245,7 @@ if __name__ == '__main__':
     #;
     inFileDat = inFileRoot+'.dat'
     inFileTxt = inFileRoot+'.txt'
-    if remoteAccess:  
+    if remoteAccess:
         myServer = 'http://ftp.esrf.eu/pub/scisoft/dabam/data/'
         # metadata
         myfileurl = myServer+inFileTxt
@@ -266,7 +262,7 @@ if __name__ == '__main__':
         ur1 = ur.decode(encoding='UTF-8')
         h = json.loads(ur1) # dictionnary with metadata
 
-        # data 
+        # data
         myfileurl = myServer+inFileDat
         try:
             u = urlopen(myfileurl)
@@ -294,35 +290,87 @@ if __name__ == '__main__':
         #print("+++++++++++++",a.shape)
 
     else:
-        with open(inFileTxt, mode='r') as f1: 
+        with open(inFileTxt, mode='r') as f1:
             h = json.load(f1)
         skipLines = h['FILE_HEADER_LINES']
         a = numpy.loadtxt(inFileDat, skiprows=skipLines) #, dtype="float64" )
+
+    return h,a,inFileTxt,inFileDat,myServer
+
+def main():
+    import json # for decoding metadata
+    #
+    # get arguments of dabam call
+    #
+    args = get_arguments()
+
+    if args.entryNumber == 0:
+        raise Exception("Usage: python dabam.py <entry_number>")
+    #
+    # list all keywords
+    #
+    argsdict = vars(args)
+    if (args.verbose == True):
+        print ("-----------------------------------------------------")
+        for i,j in argsdict.items():
+            print ("%s = %s" % (i,j))
+        print ("-----------------------------------------------------")
+
+    #
+    #retrieve data and metadata
+    #
+    h,a,inFileTxt,inFileDat,myServer = get_metadata_and_data(args)
 
     #;
     #; convert to SI units (m,rad)
     #;
     a[:,0] = a[:,0]*h['X1_FACTOR']
     a[:,1] = a[:,1]*h['Y1_FACTOR']
+    ncols = a.shape[1]
+    for i in range(2,ncols):
+        a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
+
+
     #; apply multiplicative factor
     if (args.multiply != 1.0):
         a[:,1] = a[:,1]  * float(args.multiply)
-        
+
+    #
+    # select columns with abscissas and ordinates
+    #
+    col_abscissas = int(args.useAbscissasColumn)
+    col_ordinates = int(args.useOrdinatesColumn)
+
+    col_ordinates_title = 'unknown'
+    if int(args.useHeightsOrSlopes) == -1:  #default, read from file
+        if h['FILE_FORMAT'] == 1:  # slopes in Col2
+            col_ordinates_title = 'slopes'
+        if h['FILE_FORMAT'] == 2:  # heights in Col2
+            col_ordinates_title = 'heights'
+    else:
+
+        if int(args.useHeightsOrSlopes) == 0:
+            col_ordinates_title = 'heights'
+        if int(args.useHeightsOrSlopes) == 1:
+            col_ordinates_title = 'slopes'
+
+    print("Using abscissas column index %d (mirror coordinates)"%(col_abscissas))
+    print("      ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
+
+
     #;
     #; Detrending:
     #; substract linear fit to the slopes (remove best circle from profile)
     #;
-
-    if h['FILE_FORMAT'] == 1:  # slopes in Col2
-        sy = a[:,0]
-        sz = a[:,1]
-        print("Using col1 (mirror coodinate) and col2 (slopes)")
-
-    if h['FILE_FORMAT'] == 2:  # heights in Col2
-        sy = a[:,0]
-        #TODO we suppose that data are equally spacied. Think how to generalise
-        sz = numpy.gradient(a[:,1],(sy[1]-sy[0]))
-        print("Using col1 (mirror coodinate) and col2 (heights)")
+    if col_ordinates_title == 'slopes':
+        sy = a[:,col_abscissas]
+        sz = a[:,col_ordinates]
+    elif col_ordinates_title == 'heights':
+        sy = a[:,col_abscissas]
+        #TODO we suppose that data are equally spaced. Think how to generalise
+        sz = numpy.gradient(a[:,col_ordinates],(sy[1]-sy[0]))
+    else:
+        raise NotImplementedError
 
     sz1 = numpy.copy(sz)
 
@@ -331,7 +379,6 @@ if __name__ == '__main__':
         pol = numpy.poly1d(coeffs)
         zfit = pol(sy)
         sz = sz - zfit
-    ##a[:,1] = sz
     
     
     #;
@@ -362,10 +409,16 @@ if __name__ == '__main__':
     #;
     zprof = cdf(sy,sz)
     zprof1 = cdf(sy,sz1)
-    dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
+
     outFile = args.rootFile+'Profile.dat'
+    dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
     numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk. Cols: coordinate (m), height (m).")
+    print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), height (m).")
+
+    outFile = args.rootFile+'Slopes.dat'
+    dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
+    numpy.savetxt(outFile,dd)
+    print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), slopes (rad).")
     
     #;
     #; calculate PSD on both profile and slope, and also then their cdf()
@@ -383,7 +436,7 @@ if __name__ == '__main__':
 
     outFile = args.rootFile+'PSD.dat'
     numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk. Cols: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).")
+    print ("File "+outFile+" written to disk:\n    Columns are: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).")
     
     
     #;
@@ -393,27 +446,28 @@ if __name__ == '__main__':
     
     if (args.shadowCalc == True):
         #inputs
-        npointsy = args.shadowNy
-        npointsx = args.shadowNx
+        npointsy = int(args.shadowNy)
+        npointsx = int(args.shadowNx)
         mirror_width = args.shadowWidth # in cm
         
         # units to cm
-        y=sy*10.0 # from m to cm
-        z=zprof*10.0 # from m to cm
+        y = sy * 100.0 # from m to cm
+        z = zprof * 100.0 # from m to cm
         
-        # set origing at the center of the mirror. TODO: allow any point for origin
+        # set origin at the center of the mirror. TODO: allow any point for origin
         z = z - z.min()
-        mirror_length = (y.max()-y.min())
-        y = y - 0.5*mirror_length
-        
+        y = y - y[int(y.size/2)]
+
+
         # interpolate the profile (y,z) to have npointsy points (new profile yy,zz)
-        yy=numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
-        zz=numpy.interp(yy,y,z)
+        mirror_length = y.max() - y.min()
+        yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
+        zz = numpy.interp(yy,y,z)
+
         # dump to file interpolated profile (for fun)
-        dd=numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
+        dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
         outFile = args.rootFile + "ProfileInterpolated.dat"
         numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" used to prepare SHADOW file written to disk. Cols: coordinate (cm), height (cm).")
         
         # fill the mesh arrays xx,yy,s with interpolated profile yy,zz
         xx=numpy.linspace(-mirror_width/2.0,mirror_width/2.0,npointsx)
@@ -452,14 +506,14 @@ if __name__ == '__main__':
     #; 
     #
     print ('\n---------- profile results --------------------')
-    if remoteAccess:
-        print ('Remote directory: '+myServer)
-    print ('Data File: '+inFileDat)
-    print ('Metadata File: '+inFileTxt)
-    print ('SURFACE_SHAPE: '+repr(h['SURFACE_SHAPE']))
-    print ('FACILITY: '+repr(h['FACILITY']))
-    print ('scan length [mm]: '+repr(1e3*(sy[-1]-sy[0])))
-    print ('number of points: '+repr(len(sy)))
+    if (args.localFileRoot == None):
+        print ('Remote directory:\n   %s'%myServer)
+    print ('Data File:     %s'%inFileDat)
+    print ('Metadata File: %s'%inFileTxt)
+    print ('Surface shape: %s '%(h['SURFACE_SHAPE']))
+    print ('Facility:      %s'%(h['FACILITY']))
+    print ('Scan length: %.3f mm'%(1e3*(sy[-1]-sy[0])))
+    print ('Number of points: %d'%(len(sy)))
 
     print ('   ')
     if args.polDegree == '-1':
@@ -467,22 +521,19 @@ if __name__ == '__main__':
     else:
         if args.polDegree == 1:
             print ('Linear fit coefficients: '+repr(coeffs))
-            print ('Radius of curvature [m] : '+repr(1.0/coeffs[-2]))
+            print ('Radius of curvature: %.3F m'%(1.0/coeffs[-2]))
         else:
             print ('Polynomial fit coefficients: '+repr(coeffs))
     print ('   ')
-
-
-
     print ('   ')
-    print ('Slope error s_RMS [micro rad]: '+repr(1e6*sz.std()))
-    print ('                   from PSD: '+repr(1e6*cdfSlopesRMS))
-    print ('                   from USER (metadata): '+repr(h['CALC_SLOPE_RMS']))
-    print ('Shape error h_RMS [nm]: '+repr(1e9*zprof.std()))
-    print ('            from PSD: '+repr(1e9*cdfProfileRMS))
-    print ('            from USER (metadata): '+repr(h['CALC_HEIGHT_RMS']))
-    print ('PV of height profile (before detrend) [nm]: '+repr(  1e9*(zprof1.max()-zprof1.min() )))
-    print ('PV of height profile (after detrend) [nm]: '+repr(  1e9*(zprof.max()-zprof.min() )))
+    print ('Slope error s_RMS:             %.3f urad'%(1e6*sz.std()))
+    print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
+    print ('         from USER (metadata): %s urad'%(h['CALC_SLOPE_RMS']))
+    print ('Shape error h_RMS:              %.3f nm'%(1e9*zprof.std()))
+    print ('         from PSD:              %.3f nm'%(1e9*cdfProfileRMS))
+    print ('         from USER (metadata):  %s nm'%(h['CALC_HEIGHT_RMS']))
+    print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(zprof1.max()-zprof1.min() )))
+    print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(zprof.max()-zprof.min() )))
     print ('   ')
     if (args.calcBoundaries == True): 
         print ('Diffraction/reflection boundary zones: ')
@@ -495,5 +546,13 @@ if __name__ == '__main__':
         print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
         print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
 
+    print ('%d & %d & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f \\\\'%(args.entryNumber,int(1e3*(sy[-1]-sy[0])),
+            1e6*sz.std(),1e6*cdfSlopesRMS,float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS']),
+            1e9*zprof.std(),1e9*cdfProfileRMS,float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), ))
     print ('-------------------------------------------------\n')
     print (' ')
+#
+# main program
+#
+if __name__ == '__main__':
+    main()
