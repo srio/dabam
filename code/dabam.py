@@ -111,6 +111,66 @@ def psd(x, y, onlyrange = None):
 
     return s,f
 
+def func_ellipse_slopes(x, p, q, theta, shift):
+
+
+    a = (p + q) / 2
+    b = numpy.sqrt( p * q) * numpy.sin(theta)
+    c = numpy.sqrt(a*a - b*b)
+
+    epsilon = c / a
+
+    # (x0,y0) are the coordinates of the center of the mirror
+    # x0 = (p*p - q*q) / 4 / c
+    x0 = (p - q) / 2 / epsilon
+    y0 = -b * numpy.sqrt(1 - ((x0/a)**2))
+
+    # the versor normal to the surface at the mirror center is -grad(ellipse)
+    xnor = -2 * x0 / a**2
+    ynor = -2 * y0 / b**2
+    modnor = numpy.sqrt(xnor**2 + ynor**2)
+    xnor /= modnor
+    ynor /= modnor
+    # tangent  versor is perpendicular to normal versor
+    xtan =  ynor
+    ytan = -xnor
+
+    # print(">>>> func_ellipse_slopes: a=%f, b=%f, c=%f"%(a,b,c))
+    # print(">>>> func_ellipse_slopes: x0=%f, y0=%f"%(x0,y0))
+
+    A = 1/b**2
+    B = 1/a**2
+    C = A
+
+    CCC = numpy.zeros(11)
+    #CCC[1] = A
+    CCC[2] = B*xtan**2 + C*ytan**2
+    CCC[3] = B*xnor**2 + C*ynor**2
+    #CCC[4] = .0
+    CCC[5] = 2*(B*xnor*xtan+C*ynor*ytan)
+    #CCC[6] = .0
+    #CCC[7] = .0
+    CCC[8] = .0
+    CCC[9] = 2*(B*x0*xnor+C*y0*ynor)
+    CCC[10]= .0
+
+    # ellipse implicit eq is c2 x^2 + c3 y^2 + c5 x y + c8 x + c9 y + c10 = 0
+    # AA y^2 + BB y + CC = 0
+    AA = CCC[3]
+    BB = CCC[5]*x + CCC[9]
+    CC = CCC[2]*x*x + CCC[8]*x + CCC[10]
+    DD = BB*BB-4*AA*CC
+    #yell = (-BB - numpy.sqrt(DD) )/(2*AA)
+    #yellp = numpy.gradient(yell,(x[1]-x[0]))
+
+    #calculate derivatives (primes P)
+    BBP = CCC[5]
+    CCP = 2*CCC[2]*x+CCC[8]
+    DDP = 2*BB*BBP -4*AA*CCP
+    ells = (-1/2/AA) * (BBP + DDP/2/numpy.sqrt(DD))
+
+    return ells+shift
+
 def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
     """
       write_shadowSurface: writes a mesh in the SHADOW/presurface format
@@ -175,8 +235,8 @@ def get_arguments():
     parser.add_argument('-r', '--rootFile', default='tmp',
         help='Define the root for output files. Default is "tmp".')
 
-    parser.add_argument('-D', '--polDegree', default=1,
-        help='degree of polynomial for detrending. To avoid detrending set to -1. Default=1')
+    parser.add_argument('-D', '--setDetrending', default=-2,
+        help='Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2')
 
     parser.add_argument('-B', '--calcBoundaries', action='store_true',
         help='if set, calculate specular-diffuse scattering boundary.')
@@ -294,6 +354,7 @@ def get_metadata_and_data(args):
             h = json.load(f1)
         skipLines = h['FILE_HEADER_LINES']
         a = numpy.loadtxt(inFileDat, skiprows=skipLines) #, dtype="float64" )
+        myServer = None
 
     return h,a,inFileTxt,inFileDat,myServer
 
@@ -304,8 +365,8 @@ def main():
     #
     args = get_arguments()
 
-    if args.entryNumber == 0:
-        raise Exception("Usage: python dabam.py <entry_number>")
+    # if args.entryNumber == 0:
+    #     raise Exception("Usage: python dabam.py <entry_number>")
     #
     # list all keywords
     #
@@ -327,9 +388,18 @@ def main():
     a[:,0] = a[:,0]*h['X1_FACTOR']
     a[:,1] = a[:,1]*h['Y1_FACTOR']
     ncols = a.shape[1]
-    for i in range(2,ncols):
-        a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
 
+    if int(h["FILE_FORMAT"]) <= 2:
+        for i in range(2,ncols):    # X1 Y1 Y2 Y3...
+            a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
+    elif int(h["FILE_FORMAT"]) == 3: #X1 Y1 X2 Y2 etc
+        ngroups = int(ncols / 2)
+        icol = 1
+        for i in range(2,ngroups):    # X1 Y1 Y2 Y3...
+            icol += 1
+            a[:,icol] = a[:,icol]*h['X%d_FACTOR'%i]
+            icol += 1
+            a[:,icol] = a[:,icol]*h['Y%d_FACTOR'%i]
 
     #; apply multiplicative factor
     if (args.multiply != 1.0):
@@ -341,14 +411,16 @@ def main():
     col_abscissas = int(args.useAbscissasColumn)
     col_ordinates = int(args.useOrdinatesColumn)
 
+
     col_ordinates_title = 'unknown'
     if int(args.useHeightsOrSlopes) == -1:  #default, read from file
         if h['FILE_FORMAT'] == 1:  # slopes in Col2
             col_ordinates_title = 'slopes'
         if h['FILE_FORMAT'] == 2:  # heights in Col2
             col_ordinates_title = 'heights'
+        if h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
+            col_ordinates_title = 'slopes'
     else:
-
         if int(args.useHeightsOrSlopes) == 0:
             col_ordinates_title = 'heights'
         if int(args.useHeightsOrSlopes) == 1:
@@ -374,11 +446,36 @@ def main():
 
     sz1 = numpy.copy(sz)
 
-    if args.polDegree != '-1':
-        coeffs = numpy.polyfit(sy, sz, args.polDegree)
+
+    polDegree = int(args.setDetrending)
+
+    #
+    # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
+    if polDegree == -2: # this is the default
+        if (h['SURFACE_SHAPE']).lower() == "elliptical":
+            polDegree = -3     # elliptical detrending
+        else:
+            polDegree = 1      # linear detrending
+
+
+
+    if polDegree >= 0: # polinomial fit
+        coeffs = numpy.polyfit(sy, sz, polDegree)
         pol = numpy.poly1d(coeffs)
         zfit = pol(sy)
         sz = sz - zfit
+
+    if polDegree == -3: # ellipse
+        try:
+            from scipy.optimize import curve_fit
+        except:
+            raise ImportError("Cannot perform ellipse detrending: please install scipy")
+
+        popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz, maxfev=10000)
+        print(">>>>> popt (p,q,theta): ",popt)
+        zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
+        sz = sz - zfit
+
     
     
     #;
@@ -516,14 +613,17 @@ def main():
     print ('Number of points: %d'%(len(sy)))
 
     print ('   ')
-    if args.polDegree == '-1':
-       print ('No detrending applied.')
-    else:
-        if args.polDegree == 1:
+    if polDegree >= 0:
+        if polDegree == 1:
             print ('Linear fit coefficients: '+repr(coeffs))
             print ('Radius of curvature: %.3F m'%(1.0/coeffs[-2]))
         else:
             print ('Polynomial fit coefficients: '+repr(coeffs))
+    elif polDegree == -1:
+       print ('No detrending applied.')
+    elif polDegree == -3:
+       print ('Ellipse detrending applied.')
+
     print ('   ')
     print ('   ')
     print ('Slope error s_RMS:             %.3f urad'%(1e6*sz.std()))

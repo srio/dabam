@@ -193,19 +193,19 @@ def func_ellipse_slopes_amparo(x, p, q, theta):
     # (x0,y0) are the coordinates of the center of the mirror
     # x0 = (p*p - q*q) / 4 / c
     x0 = (p - q) / 2 / epsilon
+
     y0 = (-b * numpy.sqrt(1 - ((x0/a)**2)))
-
-
     mu = numpy.arctan( - b * x0 / numpy.sqrt(a*a - x0*x0) )
+    #from Amparo Excel
+    # y0 = -0.99994
+    # mu = 0.003894
+    y0 = -b*numpy.sqrt(1-x0*x0/a/a)
+    alpha = numpy.arcsin(p/2/c*numpy.sin(numpy.pi-2*theta))
+    mu = alpha - theta
 
-
-    x0 *= -1.0
-    y0 *= -1.0
-    mu *= -1.0
-
-
-    # print(">>>> func_ellipse_slopes_amparo: a=%f, b=%f, c=%f"%(a,b,c))
-    # print(">>>> func_ellipse_slopes_amparo: x0=%f, y0=%f, mu=%f deg"%(x0,y0,180/numpy.pi*mu))
+    print(">>>> func_ellipse_slopes_amparo: a=%f, b=%f, c=%f"%(a,b,c))
+    print(">>>> func_ellipse_slopes_amparo: a^2=%f, b^2=%f, F^2=%f"%(a**2,b**2,c**2))
+    print(">>>> func_ellipse_slopes_amparo: x0=%f, y0=%f, mu=%f deg, mu=%f rad"%(x0,y0,180/numpy.pi*mu,mu))
 
     den = -(x*numpy.cos(mu))**2 - 2*numpy.cos(mu)*x*x0 + a**2 -x0**2
     bk = x0 + x*numpy.cos(mu)
@@ -226,25 +226,27 @@ def func_ellipse_amparo(x, p, q, theta):
     # x0 = (p*p - q*q) / 4 / c
     x0 = (p - q) / 2 / epsilon
     y0 = (-b * numpy.sqrt(1 - ((x0/a)**2)))
-
     mu = numpy.arctan( - b * x0 / numpy.sqrt(a*a - x0*x0) )
+    #from Amparo Excel
+    # y0 = -0.99994
+    # mu = 0.003894
+    y0 = -b*numpy.sqrt(1-x0*x0/a/a)
+    alpha = numpy.arcsin(p/2/c*numpy.sin(numpy.pi-2*theta))
+    mu = alpha - theta
 
-    x0 *= -1.0
-    y0 *= -1.0
-    mu *= -1.0
-
-    # print(">>>> func_ellipse_amparo: a=%f, b=%f, c=%f"%(a,b,c))
-    # print(">>>> func_ellipse_amparo: x0=%f, y0=%f, mu=%f deg"%(x0,y0,180/numpy.pi*mu))
+    print(">>>> func_ellipse_slopes_amparo: a=%f, b=%f, c=%f"%(a,b,c))
+    print(">>>> func_ellipse_slopes_amparo: a^2=%f, b^2=%f, F^2=%f"%(a**2,b**2,c**2))
+    print(">>>> func_ellipse_slopes_amparo: x0=%f, y0=%f, mu=%f deg, mu=%f rad"%(x0,y0,180/numpy.pi*mu,mu))
 
     brk0 = ( (x*numpy.cos(mu)+x0)/a )**2
     #print("??? brk0: ",brk0)
-    brk = -numpy.sqrt(b*b * (1 - brk0 ) ) -y0
-    #print("??? brk: ",brk)
-    pnc = numpy.cos(mu) * numpy.sqrt( (1 - (x0/a)**2) * b*b + y0)
+    brk1 = b*b * (1 - brk0 )
+    brk = -numpy.sqrt(brk1) -y0
+    #print("??? pnc0: ",pnc0)
+    pnc = numpy.cos(mu) * ( y0 + b*numpy.sqrt( 1 - x0*x0/a/a) )
     yell2 = numpy.cos(mu) * brk + numpy.sin(-mu) * x * numpy.cos(mu) + pnc
-    print(yell2)
     return yell2
-    #return func_ellipse(x,p,q,theta)
+
 
 
 
@@ -323,7 +325,7 @@ def main():
     # fit_method = 3   fit elliptical profile
     # fit_method = 4   fit elliptical slopes
 
-    fit_method = 4
+    fit_method = 3
 
     if fit_method == 0: # use curve_fit
         popt, pcov = curve_fit(func_aspheric, y0, z0)
@@ -406,21 +408,35 @@ def main():
             print("======== Curve fitting without guess =======")
             popt, cov_x = curve_fit(func_ellipse, y0, z0, maxfev=10000)
         else:
-            #dabam-19
-            p0 = 420.0
-            q0 = 0.9
-            theta0 =  3.052e-3
-            #dabam-6 (Soleil)
-            p0 = 499.14e-3
-            q0 = 4500e-3
-            theta0 = 34.99e-3
             #dabam-4 (Amparo)
             p0 = 98.00
             q0 = 0.0775
             theta0 = 3.9e-3
+            # #
+            # #dabam-6 (Soleil) p=499.14 mm q= 4500 mm teta = 34.99 mrad
+            # p0 = 499.14e-3
+            # q0 = 4500e-3
+            # theta0 = 34.99e-3
+            # #
+            # #dabam-19 #design parameter of ellipse: entrance arm: 420000mm; exit arm: 900mm; angle of incidence 3.052mrad
+            # p0 = 420.0
+            # q0 = 0.9
+            # theta0 =  3.052e-3
+            # #
+            # #dabam-20 #design parameter of ellipse: entrance arm 9000mm; exit arm: 350mm; angle of incidence: 2.5deg
+            # p0 = 9.0
+            # q0 = 0.35
+            # theta0 =  2.5*numpy.pi/180
+            # #TODO:
+            # zp0 = -zp0
+            # #
+            # #dabam-21 #design parameter of ellipse: entrance arm: 7500mm; exit arm: 2500mm; angle of incidence 0.6deg
+            # p0 = 7.5
+            # q0 = 2.5
+            # theta0 =  0.6*numpy.pi/180
 
             p_guess = [p0,q0,theta0]
-            z1 = func_ellipse(yp0, p_guess[0], p_guess[1], p_guess[2])
+            z1 = func_ellipse_amparo(yp0, p_guess[0], p_guess[1], p_guess[2])
 
             # ishift = 0
             # if ishift:
@@ -431,7 +447,7 @@ def main():
 
             print("p0,q0,theta: ",p0,q0,theta0)
 
-            fitfunc_ell_heights = lambda p, x: func_ellipse(x, p[0], p[1], p[2])
+            fitfunc_ell_heights = lambda p, x: func_ellipse_amparo(x, p[0], p[1], p[2])
             errfunc_ell_heights = lambda p, x, y: fitfunc_ell_heights(p, x) - y
 
             if ibounded == 1:
@@ -457,7 +473,7 @@ def main():
             # print("ier:", ier)
 
             print(">>>>> p_guess:", p_guess)
-            #zp1 = func_ellipse_slopes_amparo(yp0, p_guess[0], p_guess[1], p_guess[2], 0.0 ) #p_guess[3]) #TODO!!
+            #zp1 = func_ellipse_slopes(yp0, p_guess[0], p_guess[1], p_guess[2], 0.0 ) #p_guess[3]) #TODO!!
             dd=numpy.concatenate( (y0, z1) ,axis=0).reshape(2,-1).transpose()
             outFile = "tmp_z1.dat"
             numpy.savetxt(outFile,dd)
@@ -490,21 +506,49 @@ def main():
             print("======== Curve fitting without guess =======")
             popt, cov_x = curve_fit(func_ellipse_slopes, yp0, zp0, maxfev=10000)
         else:
-            #dabam-19
-            p0 = 420.0
-            q0 = 0.9
-            theta0 =  3.052e-3
-            #dabam-6 (Soleil)
-            p0 = 499.14e-3
-            q0 = 4500e-3
-            theta0 = 34.99e-3
+            ishift = 0
+
             #dabam-4 (Amparo)
             p0 = 98.00
             q0 = 0.0775
             theta0 = 3.9e-3
 
+            # # # #
+            # #dabam-6 (Soleil) p=499.14 mm q= 4500 mm teta = 34.99 mrad
+            # p0 = 499.14e-3
+            # q0 = 4500e-3
+            # theta0 = 34.99e-3
+            # ishift = 1
+            # #
+            # #
+            # # #
+            # #dabam-19 #design parameter of ellipse: entrance arm: 420000mm; exit arm: 900mm; angle of incidence 3.052mrad
+            # p0 = 420.0            #WRONG INPUTS?
+            # q0 = 0.9              #WRONG INPUTS?
+            # theta0 =  3.052e-3    #WRONG INPUTS?
+            # # yp0 = yp0 - yp0[int(yp0.size/2)]
+            #
+            # #
+            # #dabam-20 #design parameter of ellipse: entrance arm 9000mm; exit arm: 350mm; angle of incidence: 2.5deg
+            # p0 = 9.0
+            # q0 = 0.35
+            # theta0 =  2.5*numpy.pi/180
+            # #TODO:
+            # yp0 = yp0 - yp0[int(yp0.size/2)]
+            # zp0 = -zp0
+            #
+            # #
+            # #dabam-21 #design parameter of ellipse: entrance arm: 7500mm; exit arm: 2500mm; angle of incidence 0.6deg
+            # p0 = 7.5
+            # q0 = 2.5
+            # theta0 =  0.6*numpy.pi/180
+            # ishift = 1
+
             p_guess = [p0,q0,theta0]
             zp1 = func_ellipse_slopes(yp0, p_guess[0], p_guess[1], p_guess[2])
+
+            if ishift:
+                zp0 = zp0 + (zp1[0]-zp0[0])
 
             print("p0,q0,theta: ",p0,q0,theta0)
 
@@ -519,7 +563,7 @@ def main():
                 print("======== Bounded Least Squares fitting =======")
                 # https://github.com/jjhelmus/leastsqbound-scipy
                 from leastsqbound import leastsqbound
-                bounds = [ (p0*0.8,p0*1.2) , (q0*0.8,q0*1.2), (theta0*0.98,theta0*1.02)]
+                bounds = [ (p0*0.998,p0*1.002) , (q0*0.8,q0*1.2), (theta0*0.98,theta0*1.02)]
                 popt, cov_x, infodic, mesg, ier = leastsqbound(errfunc_ell_slopes, p_guess, args=(yp0,zp0),
                                                             bounds=bounds,full_output=True)
 
@@ -590,7 +634,7 @@ def main():
             ax = plt.gca()
             ax.get_xaxis().get_major_formatter().set_useOffset(False)
             ax.get_yaxis().get_major_formatter().set_useOffset(False)
-            #plt.plot(y0*1e3,z0*1e6)
+            plt.plot(y0*1e3,z0*1e6)
             if ibounded != 0: plt.plot(y0*1e3,z1*1e6)
             plt.plot(y0*1e3,z2*1e6)
             plt.title("height data (blue), starting (green) and optimized (red) ellipse")
