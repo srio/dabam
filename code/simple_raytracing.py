@@ -47,7 +47,7 @@ def main():
     #
     #load height profile
     #
-    input_file = "tmpProfile.dat"
+    input_file = "tmpHeights.dat"
     a = numpy.loadtxt(input_file)
     hy0 = a[:,0]
     hz0 = a[:,1]

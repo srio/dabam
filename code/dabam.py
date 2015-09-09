@@ -502,20 +502,24 @@ def main():
         print ("File "+outFile+" written to disk. Cols: slope[rad], counts.")
     
     #;
-    #; calculate profile by integrating the slope
+    #; calculate heights by integrating the slope
     #;
     zprof = cdf(sy,sz)
     zprof1 = cdf(sy,sz1)
 
-    outFile = args.rootFile+'Profile.dat'
-    dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
-    numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), height (m).")
+    #
+    # Dump heights and slopes profiles to files
+    #
+    if args.rootFile != "":
+        outFile = args.rootFile+'Heights.dat'
+        dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
+        numpy.savetxt(outFile,dd)
+        print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), height (m).")
 
-    outFile = args.rootFile+'Slopes.dat'
-    dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
-    numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), slopes (rad).")
+        outFile = args.rootFile+'Slopes.dat'
+        dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
+        numpy.savetxt(outFile,dd)
+        print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), slopes (rad).")
     
     #;
     #; calculate PSD on both profile and slope, and also then their cdf()
@@ -529,11 +533,12 @@ def main():
     cdfSlopesRMS = cdfSlopes.max() 
     cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
 
-    dd=numpy.concatenate( (f, psdProfile, psdSlopes, cdfProfile, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
-
-    outFile = args.rootFile+'PSD.dat'
-    numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk:\n    Columns are: freq (m^-1), psd_prof (m^3), psd_slope (rad^3), cdf(psd_prof), cdf(psd_slope).")
+    if args.rootFile != "":
+        dd=numpy.concatenate( (f, psdProfile, psdSlopes, cdfProfile, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
+        outFile = args.rootFile+'PSD.dat'
+        numpy.savetxt(outFile,dd)
+        print ("File "+outFile+" written to disk:\n    Columns are: freq (m^-1), psd_prof (m^3),psd_slope (rad^3),\n"+
+                                                  "                              cdf(psd_prof), cdf(psd_slope).")
     
     
     #;
