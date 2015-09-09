@@ -22,6 +22,18 @@ __copyright = "ESRF, 2013-2015"
 
 import numpy
 
+# class dabam(object):
+#     def __init__(self,dictionnary):
+#         self.inputs = dictionnary
+#     def info(self):
+#         print(type(self.inputs))
+#         argsdict = vars(self.inputs)
+#         print ("-----------------------------------------------------")
+#         for i,j in argsdict.items():
+#             print ("%s = %s" % (i,j))
+#         print ("-----------------------------------------------------")
+
+
 #
 # functions 
 # 
@@ -371,11 +383,15 @@ def main():
     # list all keywords
     #
     argsdict = vars(args)
+
     if (args.verbose == True):
         print ("-----------------------------------------------------")
         for i,j in argsdict.items():
             print ("%s = %s" % (i,j))
         print ("-----------------------------------------------------")
+
+    # dm = dabam(argsdict)
+    # dm.info()
 
     #
     #retrieve data and metadata
