@@ -1,17 +1,15 @@
 """
 
-dabam: (dataBase for metrology)
-       python tools for processing remote files containing the results
-       of metrology measurements on X-ray mirrors
+simple_physicaloptics
+   performs optics calculations using physical optics
 
-       functions: 
-             cdf (calculate cumulative distribution function)
-             psd (calculate power spectral density)
-             write_shadowSurface (writes file with a mesh for SHADOW)
- 
-       MODIFICATION HISTORY:
-           20150828 srio@esrf.eu, written
-           20131109 srio@esrf.eu, added command line arguments, access metadata
+   inputs: reads the heights profiles from tmpHeights.dat
+           file produced by dabam.py with detrending, e.g.:
+           python3 dabam.py 4
+
+    output: some plots
+
+
 
 """
 
@@ -88,6 +86,13 @@ def main():
     N = hy.size
     print("    Mirror contains %d points"%N)
 
+    # #
+    # #load slopes profile
+    # #
+    # input_file = "tmpSlopes.dat"
+    # a = numpy.loadtxt(input_file)
+    # hy = a[:,0]
+    # sz = a[:,1]
 
     #
     #compute slopes
@@ -102,15 +107,16 @@ def main():
     hy_projected = hy * numpy.sin(theta_grazing)
 
 
-
-
-
     # # dump to file
-    # dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
     # outFile = "tmpImage.dat"
-    # dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
-    # dd[:,1] /= dd[:,1].max()
-    # numpy.savetxt(outFile,dd)
+    # if outFile != "":
+    #     dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
+    #     dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
+    #     dd[:,1] /= dd[:,1].max()
+    #     numpy.savetxt(outFile,dd)
+
+
+
     sourcepoints = 1000
     slitpoints = 1000
     detpoints = 1000
@@ -119,8 +125,6 @@ def main():
     aperture_diameter   =   2 * hy_projected.max()
 
     airy_disk_theta = 1.22 * wavelength / aperture_diameter
-
-
     detector_size = 50 * airy_disk_theta * q
     fwhm_theory = 2 * 2.35 * slope_errors_rms * q
 
@@ -162,28 +166,32 @@ def main():
     #
     # write spec formatted file
     #
-    # out_file = "simple_physicaloptics.spec"
-    # f = open(out_file, 'w')
-    # header="#F %s \n\n#S  1 fresnel-kirchhoff diffraction integral\n#N 3 \n#L X[m]  intensity  phase\n"%out_file
+    out_file = "" # "simple_physicaloptics.spec"
+    if out_file != "":
+        f = open(out_file, 'w')
+        header="#F %s \n\n#S  1 fresnel-kirchhoff diffraction integral\n#N 3 \n#L X[m]  intensity  phase\n"%out_file
+
+        f.write(header)
+
+        for i in range(detpoints):
+           out = numpy.array((position2x[i], fieldIntensity[i], fieldPhase[i]))
+           f.write( ("%20.11e "*out.size+"\n") % tuple( out.tolist())  )
+
+        f.close()
+        print ("File written to disk: %s"%out_file)
+
     #
-    # f.write(header)
+    # write two-column formatted file
     #
-    # for i in range(detpoints):
-    #    out = numpy.array((position2x[i], fieldIntensity[i], fieldPhase[i]))
-    #    f.write( ("%20.11e "*out.size+"\n") % tuple( out.tolist())  )
-    #
-    # f.close()
-    # print ("File written to disk: %s"%out_file)
 
     fieldIntensity /= fieldIntensity.max()
     tmpAbscissas = position3x * 1e6
-    dd=numpy.concatenate( (tmpAbscissas, fieldIntensity) ,axis=0).reshape(2,-1).transpose()
 
     outFile = "tmpPhysicalOptics.dat"
-    numpy.savetxt(outFile,dd)
-    print ("File "+outFile+" written to disk:\n")
-
-
+    if outFile != "":
+        dd=numpy.concatenate( (tmpAbscissas, fieldIntensity) ,axis=0).reshape(2,-1).transpose()
+        numpy.savetxt(outFile,dd)
+        print ("File "+outFile+" written to disk.\n")
 
     #
     #plots
@@ -202,28 +210,6 @@ def main():
         plt.ylabel("Intensity [a.u.]")
         plt.show()
 
-
-        # f1 = plt.figure(1)
-        # plt.plot(hy*1e3,hz*1e6)
-        # plt.title("heights")
-        # plt.xlabel("Y [mm]")
-        # plt.ylabel("Z [nm]")
-        #
-        # f2 = plt.figure(2)
-        # plt.plot(hy*1e3,sz*1e6)
-        # plt.title("slopes")
-        # plt.xlabel("Y [mm]")
-        # plt.ylabel("Z' [urad]")
-
-
-        # f3 = plt.figure(3)
-        # #plt.plot(1e6*bin_edges[0:-1],image_histogram)
-        # plt.plot(1e6*bin_centers,image_histogram)
-        # plt.xlim((-50,50))
-        # plt.title("image histogram FWHM = %.3f um, theory %.3f"%(fwhm,fwhm_theory*1e6))
-        # plt.xlabel("Y [um]")
-        #
-        # plt.show()
 
 #
 # main program

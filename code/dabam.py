@@ -8,6 +8,14 @@ dabam: (dataBase for metrology)
              cdf (calculate cumulative distribution function)
              psd (calculate power spectral density)
              write_shadowSurface (writes file with a mesh for SHADOW)
+             func_ellipse_slopes
+             func_ellipse
+             func_ellipse_slopes_amparo
+             func_ellipse_amparo
+             write_shadowSurface
+             get_arguments
+             get_metadata_and_data
+
  
        MODIFICATION HISTORY:
            20130902 srio@esrf.eu, written

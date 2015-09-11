@@ -1,17 +1,15 @@
 """
 
-dabam: (dataBase for metrology)
-       python tools for processing remote files containing the results
-       of metrology measurements on X-ray mirrors
+simple_raytracing
+   performs optics calculations using raytracing
 
-       functions: 
-             cdf (calculate cumulative distribution function)
-             psd (calculate power spectral density)
-             write_shadowSurface (writes file with a mesh for SHADOW)
- 
-       MODIFICATION HISTORY:
-           20150828 srio@esrf.eu, written
-           20131109 srio@esrf.eu, added command line arguments, access metadata
+   inputs: reads the heights profiles from tmpHeights.dat
+           file produced by dabam.py with detrending, e.g.:
+           python3 dabam.py 4
+
+    output: some plots
+
+
 
 """
 
@@ -58,7 +56,7 @@ def main():
     do_interpolate = 0
     if do_interpolate:
         mirror_length = hy0.max() - hy0.min()
-        hy = numpy.linspace(hy0.min(),hy0.max(),2000)
+        hy = numpy.linspace(hy0.min(),hy0.max(),10000)
         hz = numpy.interp(hy,hy0,hz0)
     else:
         hy = hy0
@@ -110,11 +108,13 @@ def main():
     bin_centers += (bin_edges[1] - bin_centers[0])
 
     # dump to file
-    dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
     outFile = "tmpImage.dat"
-    dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
-    dd[:,1] /= dd[:,1].max()
-    numpy.savetxt(outFile,dd)
+    if outFile != "":
+        dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
+        dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
+        dd[:,1] /= dd[:,1].max()
+        numpy.savetxt(outFile,dd)
+        print("File written to disk: %s"%outFile)
 
     #
     #CALCULATE fwhm
@@ -134,26 +134,11 @@ def main():
     #
     do_plots = 0
     if do_plots:
-        # f1 = plt.figure(1)
-        # plt.plot(hy*1e3,hz*1e6)
-        # plt.title("heights")
-        # plt.xlabel("Y [mm]")
-        # plt.ylabel("Z [nm]")
-        #
-        # f2 = plt.figure(2)
-        # plt.plot(hy*1e3,sz*1e6)
-        # plt.title("slopes")
-        # plt.xlabel("Y [mm]")
-        # plt.ylabel("Z' [urad]")
-
-
-        f3 = plt.figure(3)
-        #plt.plot(1e6*bin_edges[0:-1],image_histogram)
+        f1 = plt.figure(3)
         plt.plot(1e6*bin_centers,image_histogram)
         plt.xlim((-50,50))
         plt.title("image histogram FWHM = %.3f um, theory %.3f"%(fwhm,fwhm_theory*1e6))
         plt.xlabel("Y [um]")
-
         plt.show()
 
 #

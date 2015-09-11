@@ -1,17 +1,15 @@
 """
 
-dabam: (dataBase for metrology)
-       python tools for processing remote files containing the results
-       of metrology measurements on X-ray mirrors
+aspheric_fit
+   tests for performing aspheric and elliptical fits on height and slopes profiles
 
-       functions: 
-             cdf (calculate cumulative distribution function)
-             psd (calculate power spectral density)
-             write_shadowSurface (writes file with a mesh for SHADOW)
- 
-       MODIFICATION HISTORY:
-           20150828 srio@esrf.eu, written
-           20131109 srio@esrf.eu, added command line arguments, access metadata
+   inputs: reads the heights profiles from tmpHeights.da and the slopes profiles
+           from tmpSlopes.dat, files produced by dabam.py without detrending, e.g.:
+           python3 dabam.py 4 -D -1
+
+    output: some plots
+
+
 
 """
 
@@ -25,11 +23,13 @@ from scipy.optimize import curve_fit, leastsq
 
 def func_aspheric(x, radius, kappa):
     #https://en.wikipedia.org/wiki/Aspheric_lens
-
     tmp = numpy.power(x,2) / radius / ( 1.0 + numpy.sqrt(1.0 - (1.0 + kappa) * ( numpy.power(x / radius,2) )))
     return tmp
 
 def func_ellipse_slopes(x, p, q, theta):
+    #
+    # returns y'(x), the slopes of an ellipse defined by p,q, and theta
+    #
 
 
     a = (p + q) / 2
@@ -53,8 +53,6 @@ def func_ellipse_slopes(x, p, q, theta):
     xtan =  ynor
     ytan = -xnor
 
-    # print(">>>> func_ellipse_slopes: a=%f, b=%f, c=%f"%(a,b,c))
-    # print(">>>> func_ellipse_slopes: x0=%f, y0=%f"%(x0,y0))
 
     A = 1/b**2
     B = 1/a**2
@@ -91,7 +89,9 @@ def func_ellipse_slopes(x, p, q, theta):
 
 
 def func_ellipse(x, p, q, theta):
-
+    #
+    # returns y(x), the heights of an ellipse defined by p,q, and theta
+    #
 
     a = (p + q) / 2
     b = numpy.sqrt( p * q) * numpy.sin(theta)
@@ -145,45 +145,10 @@ def func_ellipse(x, p, q, theta):
 
     return yell2
 
-    # beta =  numpy.abs(numpy.arctan2(y0,x0))
-    # m =  -b * x0 / numpy.sqrt(a*a - x0*x0)
-    # m_angle = numpy.abs(numpy.arctan(m))
-    #
-    # #rotation
-    # xlab =  (x*numpy.cos(-m_angle) - y*numpy.sin(-m_angle))
-    # ylab =  (x*numpy.sin(-m_angle) + y*numpy.cos(-m_angle))
-    # #translation
-    # xlab += x0
-    # ylab += y0
-    #
-    # print(">>>> p=%f, q=%f, theta=%f"%(p,q,theta))
-    # print(">>>> a=%f, b=%f, c=%f, eps=%f "%(a,b,c,epsilon))
-    # print(">>>> x0=%f, y0=%f, d0=%f, beta=%f deg, m=%f deg"%(x0,y0,numpy.sqrt(x0*x0+y0*y0),180/numpy.pi*beta,180/numpy.pi*m_angle))
-    #
-    # yell_lab = - b * numpy.sqrt(1 - (xlab/a)**2 )
-    # #
-    # # beta2 = -beta1
-    # # print("beta is>>>>>>>",beta)
-    # xloc0 = xlab - x0
-    # yloc0 = ylab - y0
-    # xloc =  (xloc0*numpy.cos(+m_angle) - yloc0*numpy.sin(+m_angle))
-    # yloc =  (xloc0*numpy.sin(+m_angle) + yloc0*numpy.cos(+m_angle))
-    # # for i in range(xloc.size):
-    # #     print(i,x[i],xloc[i],x[i]-xloc[i])
-    #
-    #
-    # xell_loc0 =  xlab - x0
-    # yell_loc0 =  yell_lab - y0
-    # xell_loc =  (xell_loc0*numpy.cos(+m_angle) - yell_loc0*numpy.sin(+m_angle))
-    # yell_loc =  (xell_loc0*numpy.sin(+m_angle) + yell_loc0*numpy.cos(+m_angle))
-    #
-    #
-    # print(">>>> Peak to valle lab: %f m, local: %f m"%(yell_lab.max()-yell_lab.min(),yell_loc.max()-yell_loc.min()))
-    # return yell1, yell2 # xlab,yell_lab,xell_loc,yell_loc
-    # #return xloc,yell_loc
-
 def func_ellipse_slopes_amparo(x, p, q, theta):
-
+    #
+    # returns y'(x), the slopes of an ellipse defined by p,q, and theta using the fromula in REF
+    #
     a = (p + q) / 2
     b = numpy.sqrt( p * q) * numpy.sin(theta)
     c = numpy.sqrt(a*a - b*b)
@@ -215,6 +180,9 @@ def func_ellipse_slopes_amparo(x, p, q, theta):
     return ells
 
 def func_ellipse_amparo(x, p, q, theta):
+    #
+    # returns y(x), the heights of an ellipse defined by p,q, and theta using the formula in REF
+    #
 
     a = (p + q) / 2
     b = numpy.sqrt( p * q) * numpy.sin(theta)
@@ -234,9 +202,9 @@ def func_ellipse_amparo(x, p, q, theta):
     alpha = numpy.arcsin(p/2/c*numpy.sin(numpy.pi-2*theta))
     mu = alpha - theta
 
-    print(">>>> func_ellipse_slopes_amparo: a=%f, b=%f, c=%f"%(a,b,c))
-    print(">>>> func_ellipse_slopes_amparo: a^2=%f, b^2=%f, F^2=%f"%(a**2,b**2,c**2))
-    print(">>>> func_ellipse_slopes_amparo: x0=%f, y0=%f, mu=%f deg, mu=%f rad"%(x0,y0,180/numpy.pi*mu,mu))
+    # print(">>>> func_ellipse_slopes_amparo: a=%f, b=%f, c=%f"%(a,b,c))
+    # print(">>>> func_ellipse_slopes_amparo: a^2=%f, b^2=%f, F^2=%f"%(a**2,b**2,c**2))
+    # print(">>>> func_ellipse_slopes_amparo: x0=%f, y0=%f, mu=%f deg, mu=%f rad"%(x0,y0,180/numpy.pi*mu,mu))
 
     brk0 = ( (x*numpy.cos(mu)+x0)/a )**2
     #print("??? brk0: ",brk0)
@@ -246,8 +214,6 @@ def func_ellipse_amparo(x, p, q, theta):
     pnc = numpy.cos(mu) * ( y0 + b*numpy.sqrt( 1 - x0*x0/a/a) )
     yell2 = numpy.cos(mu) * brk + numpy.sin(-mu) * x * numpy.cos(mu) + pnc
     return yell2
-
-
 
 
 def cdf(sy, sz, method = 1 ):
@@ -291,7 +257,7 @@ def main():
     #
     #load height profile
     #
-    input_file = "tmpProfile.dat"
+    input_file = "tmpHeights.dat"
     a = numpy.loadtxt(input_file)
     y0 = a[:,0]
     z0 = a[:,1]
@@ -491,10 +457,6 @@ def main():
         outFile = "tmp_z2.dat"
         numpy.savetxt(outFile,dd)
         print ("File "+outFile+" written to disk:\n")
-
-
-
-
 
     if fit_method == 4: # ellipse, slopes fit
 
