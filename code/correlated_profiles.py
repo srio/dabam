@@ -48,7 +48,6 @@ def rsgeng1D(N,rL,h,cl):
     # %
     #
 
-
     # format long;
     #
     # x = linspace(-rL/2,rL/2,N);
@@ -64,7 +63,6 @@ def rsgeng1D(N,rL,h,cl):
     # % Gaussian filter
     # F = exp(-x.^2/(cl^2/2));
     F = numpy.exp(-x**2/(cl**2/2))
-
     #
     # % correlation of surface using convolution (faltung), inverse
     # % Fourier transform and normalizing prefactors
@@ -231,7 +229,6 @@ def main():
         height_rms = 3e-9
         correlation_length = 0.03
         x, f = rsgeng1D(N,mirror_length,height_rms,correlation_length)
-
 
     acf,cl,lags = acf1D(f,x)
     #print("acf=",acf,"cl=",cl,"lags=",lags)

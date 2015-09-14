@@ -30,16 +30,20 @@ __copyright = "ESRF, 2013-2015"
 
 import numpy
 
-# class dabam(object):
-#     def __init__(self,dictionnary):
-#         self.inputs = dictionnary
-#     def info(self):
-#         print(type(self.inputs))
-#         argsdict = vars(self.inputs)
-#         print ("-----------------------------------------------------")
-#         for i,j in argsdict.items():
-#             print ("%s = %s" % (i,j))
-#         print ("-----------------------------------------------------")
+
+
+#
+#testing OO way
+#
+class dabam(object):
+    def __init__(self,dictionnary={}):
+        self.inputs = dictionnary
+    def info(self):
+        argsdict = self.inputs
+        print ("-----------------------------------------------------")
+        for i,j in argsdict.items():
+            print ("dabam.info(): %s = %s" % (i,j))
+        print ("-----------------------------------------------------")
 
 
 #
@@ -285,6 +289,9 @@ def get_arguments():
     parser.add_argument('-O', '--useOrdinatesColumn', default=1,
         help='using ordinates column index. Default=1')
 
+    parser.add_argument('-P', '--plot', default="",
+        help='plot: heights slopes psd_h psd_s cdf_h cdf_s')
+
     args = parser.parse_args()
 
     return args
@@ -380,26 +387,31 @@ def get_metadata_and_data(args):
 
 def main():
     import json # for decoding metadata
+
     #
     # get arguments of dabam call
     #
     args = get_arguments()
 
-    # if args.entryNumber == 0:
-    #     raise Exception("Usage: python dabam.py <entry_number>")
-    #
-    # list all keywords
-    #
-    argsdict = vars(args)
+    if (args.localFileRoot == None):
+        if args.entryNumber == 0:
+            raise Exception("Usage: python dabam.py <entry_number>")
 
+    #
+    #  list arguments
+    #
+
+    argsdict = vars(args)
     if (args.verbose == True):
         print ("-----------------------------------------------------")
         for i,j in argsdict.items():
             print ("%s = %s" % (i,j))
         print ("-----------------------------------------------------")
 
-    # dm = dabam(argsdict)
-    # dm.info()
+
+    dm = dabam(argsdict)
+
+    dm.info()
 
     #
     #retrieve data and metadata
@@ -425,7 +437,9 @@ def main():
             icol += 1
             a[:,icol] = a[:,icol]*h['Y%d_FACTOR'%i]
 
+    #
     #; apply multiplicative factor
+    #
     if (args.multiply != 1.0):
         a[:,1] = a[:,1]  * float(args.multiply)
 
@@ -469,18 +483,14 @@ def main():
         raise NotImplementedError
 
     sz1 = numpy.copy(sz)
-
-
     polDegree = int(args.setDetrending)
 
-    #
     # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
     if polDegree == -2: # this is the default
         if (h['SURFACE_SHAPE']).lower() == "elliptical":
             polDegree = -3     # elliptical detrending
         else:
             polDegree = 1      # linear detrending
-
 
 
     if polDegree >= 0: # polinomial fit
@@ -548,17 +558,17 @@ def main():
     #;
     #; calculate PSD on both profile and slope, and also then their cdf()
     #;
-    psdProfile,f = psd(sy,zprof,onlyrange=None)
+    psdHeights,f = psd(sy,zprof,onlyrange=None)
     psdSlopes,f = psd(sy,sz,onlyrange=None)
-    cdfProfile = numpy.sqrt(cdf(f,psdProfile))
-    cdfProfileRMS = cdfProfile.max()
-    cdfProfile = 1.0-cdfProfile/cdfProfileRMS
+    cdfHeights = numpy.sqrt(cdf(f,psdHeights))
+    cdfHeightsRMS = cdfHeights.max()
+    cdfHeights = 1.0-cdfHeights/cdfHeightsRMS
     cdfSlopes = numpy.sqrt(cdf(f,psdSlopes)) 
     cdfSlopesRMS = cdfSlopes.max() 
     cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
 
     if args.rootFile != "":
-        dd=numpy.concatenate( (f, psdProfile, psdSlopes, cdfProfile, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
+        dd = numpy.concatenate( (f, psdHeights, psdSlopes, cdfHeights, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
         outFile = args.rootFile+'PSD.dat'
         numpy.savetxt(outFile,dd)
         print ("File "+outFile+" written to disk:\n    Columns are: freq (m^-1), psd_prof (m^3),psd_slope (rad^3),\n"+
@@ -622,8 +632,8 @@ def main():
         h_cut = wavelength/(4*numpy.pi*numpy.sin(theta)) #m 
         h_cut_normalized = h_cut/zprof.std()
         # note that numpy.interp requires increasing abscissas
-        inew = cdfProfile.argsort()
-        f_cut = numpy.interp( h_cut_normalized ,cdfProfile[inew],f[inew])
+        inew = cdfHeights.argsort()
+        f_cut = numpy.interp( h_cut_normalized ,cdfHeights[inew],f[inew])
 
 
 
@@ -659,7 +669,7 @@ def main():
     print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
     print ('         from USER (metadata): %s urad'%(h['CALC_SLOPE_RMS']))
     print ('Shape error h_RMS:              %.3f nm'%(1e9*zprof.std()))
-    print ('         from PSD:              %.3f nm'%(1e9*cdfProfileRMS))
+    print ('         from PSD:              %.3f nm'%(1e9*cdfHeightsRMS))
     print ('         from USER (metadata):  %s nm'%(h['CALC_HEIGHT_RMS']))
     print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(zprof1.max()-zprof1.min() )))
     print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(zprof.max()-zprof.min() )))
@@ -677,9 +687,54 @@ def main():
 
     print ('%d & %d & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f \\\\'%(args.entryNumber,int(1e3*(sy[-1]-sy[0])),
             1e6*sz.std(),1e6*cdfSlopesRMS,float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS']),
-            1e9*zprof.std(),1e9*cdfProfileRMS,float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), ))
+            1e9*zprof.std(),1e9*cdfHeightsRMS,float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), ))
     print ('-------------------------------------------------\n')
     print (' ')
+
+    if (args.plot != ""):
+        try:
+            from matplotlib import pylab as plt
+        except:
+            raise ImportError
+
+        print("plotting: ",args.plot)
+        if (args.plot == "heights" or args.plot == "all"):
+            f1 = plt.figure(1)
+            plt.plot(1e3*sy,1e6*zprof)
+            plt.title("heights profile")
+            plt.xlabel("Y [mm]")
+            plt.ylabel("Z [um]")
+        if (args.plot == "slopes" or args.plot == "all"):
+            f2 = plt.figure(2)
+            plt.plot(1e3*sy,1e6*sz)
+            plt.title("slopes profile" or args.plot == "all")
+            plt.xlabel("Y [mm]")
+            plt.ylabel("Zp [urad]")
+        if (args.plot == "psd_h" or args.plot == "all"):
+            f3 = plt.figure(3)
+            plt.loglog(f,psdHeights)
+            plt.title("PSD of heights profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("PSD [m^3]")
+        if (args.plot == "psd_s" or args.plot == "all"):
+            f4 = plt.figure(4)
+            plt.loglog(f,psdSlopes)
+            plt.title("PSD of slopes profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("PSD [rad^3]")
+        if (args.plot == "cdf_h" or args.plot == "all"):
+            f5 = plt.figure(5)
+            plt.semilogx(f,cdfHeights)
+            plt.title("Lambda CDF(PDF) of heights profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("heights Lambda")
+        if (args.plot == "cdf_s" or args.plot == "all"):
+            f6 = plt.figure(6)
+            plt.semilogx(f,cdfSlopes)
+            plt.title("Lambda CDF(PDF) of slopes profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("slopes Lambda")
+        plt.show()
 #
 # main program
 #
