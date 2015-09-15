@@ -411,7 +411,7 @@ def main():
 
     dm = dabam(argsdict)
 
-    dm.info()
+    # dm.info()
 
     #
     #retrieve data and metadata
@@ -464,8 +464,8 @@ def main():
         if int(args.useHeightsOrSlopes) == 1:
             col_ordinates_title = 'slopes'
 
-    print("Using abscissas column index %d (mirror coordinates)"%(col_abscissas))
-    print("      ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
+    print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
+    print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
 
 
     #;
@@ -506,7 +506,6 @@ def main():
             raise ImportError("Cannot perform ellipse detrending: please install scipy")
 
         popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz, maxfev=10000)
-        print(">>>>> popt (p,q,theta): ",popt)
         zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
         sz = sz - zfit
 
@@ -548,12 +547,12 @@ def main():
         outFile = args.rootFile+'Heights.dat'
         dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
         numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), height (m).")
+        print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
 
         outFile = args.rootFile+'Slopes.dat'
         dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
         numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk:\n    Columns are: coordinate (m), slopes (rad).")
+        print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
     
     #;
     #; calculate PSD on both profile and slope, and also then their cdf()
@@ -571,8 +570,9 @@ def main():
         dd = numpy.concatenate( (f, psdHeights, psdSlopes, cdfHeights, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
         outFile = args.rootFile+'PSD.dat'
         numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk:\n    Columns are: freq (m^-1), psd_prof (m^3),psd_slope (rad^3),\n"+
-                                                  "                              cdf(psd_prof), cdf(psd_slope).")
+        print ("File "+outFile+" written to disk:  Columns are:\n"+
+               "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
+               "              cdf(psd_prof),cdf(psd_slope).")
     
     
     #;
@@ -654,10 +654,10 @@ def main():
     print ('   ')
     if polDegree >= 0:
         if polDegree == 1:
-            print ('Linear fit coefficients: '+repr(coeffs))
+            print ("Linear detrending: z'=%g x%+g"%(coeffs[0],coeffs[1]))
             print ('Radius of curvature: %.3F m'%(1.0/coeffs[-2]))
         else:
-            print ('Polynomial fit coefficients: '+repr(coeffs))
+            print ('Polynomial detrending coefficients: '+repr(coeffs))
     elif polDegree == -1:
        print ('No detrending applied.')
     elif polDegree == -3:
@@ -685,9 +685,10 @@ def main():
         print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
         print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
 
-    print ('%d & %d & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f \\\\'%(args.entryNumber,int(1e3*(sy[-1]-sy[0])),
-            1e6*sz.std(),1e6*cdfSlopesRMS,float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS']),
-            1e9*zprof.std(),1e9*cdfHeightsRMS,float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), ))
+    print ('%d & %d & %.2f (%.2f) & %.2f & %.2f (%.2f) & %.2f \\\\'%(args.entryNumber,
+            int(1e3*(sy[-1]-sy[0])),
+            1e6*sz.std(),   float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS'])  , 1e6*cdfSlopesRMS,
+            1e9*zprof.std(),float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), 1e9*cdfHeightsRMS, ))
     print ('-------------------------------------------------\n')
     print (' ')
 
