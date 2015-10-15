@@ -216,6 +216,31 @@ def func_ellipse_amparo(x, p, q, theta):
     return yell2
 
 
+def func_ellipse_xianbo(X, TH, S1, S2, OFFSET, XC):
+    #
+    # Hi Manuel,
+    # I have checked the mirror 20 and 21. I got quite good elliptical fit with my Igor fitting function. The figure error results are:
+    # Mirror 20: sigma_s = 0.42 urad, sigma_h = 2.06 nm
+    # Mirror 21: sigma_s = 0.50 urad, sigma_h = 6.62 nm
+    #
+    # The 1-D elliptical fitting function I used is:
+    #
+    # Variables: OFFSET, S1, S2 and TH, XC (x offset)
+    #
+    # y = OFFSET+ cos(TH-asin((S1*sin(2.0*TH))/sqrt(S1^2.0+S2^2.0+2*S1*S2*cos(2*TH))))*(sqrt(S1*S2*(1.0-(-2.0*S2*sqrt((S2+S1*cos(2*TH))^2.0/(S1^2.0+S2^2.0+2.0*S1*S2*cos(2.0*TH)))+sqrt(S1^2.0+S2^2.0+2.0*S1*S2*cos(2.0*TH)))^2.0/(S1+S2)^2.0)*sin(TH)^2.0)-sqrt(S1*S2*(1.0-(1.0/(S1+S2)^2.0)*(-2.0*S2*sqrt((S2+S1*cos(2.0*TH))^2.0/(S1^2.0+S2^2.0+2.0*S1*S2*cos(2.0*TH)))+sqrt(S1^2.0+S2^2.0+2.0*S1*S2*cos(2.0*TH))+2.0*(X-XC)*cos(TH-asin((S1*sin(2.0*TH))/sqrt(S1^2.0+S2^2.0+2.0*S1*S2*cos(2.0*TH)))))^2.0)*sin(TH)^2.0)+(X-XC)*sin(TH-asin((S1*sin(2.0*TH))/sqrt(S1^2.0+S2^2.0+2.0*S1*S2*cos(2*TH)))))
+    y = OFFSET+ numpy.cos(TH-numpy.arcsin((S1*numpy.sin(2.0*TH))/numpy.sqrt(S1**2.0+S2**2.0+2*S1*S2*numpy.cos(2*TH))))*\
+                (numpy.sqrt(S1*S2*(1.0-(-2.0*S2*numpy.sqrt((S2+S1*numpy.cos(2*TH))**2.0/ \
+                (S1**2.0+S2**2.0+2.0*S1*S2*numpy.cos(2.0*TH)))+numpy.sqrt(S1**2.0+S2**2.0+ \
+                2.0*S1*S2*numpy.cos(2.0*TH)))**2.0/(S1+S2)**2.0)*numpy.sin(TH)**2.0)- \
+                numpy.sqrt(S1*S2*(1.0-(1.0/(S1+S2)**2.0)*(-2.0*S2*numpy.sqrt((S2+S1*numpy.cos(2.0*TH))**2.0/ \
+                (S1**2.0+S2**2.0+2.0*S1*S2*numpy.cos(2.0*TH)))+numpy.sqrt(S1**2.0+S2**2.0+ \
+                2.0*S1*S2*numpy.cos(2.0*TH))+2.0*(X-XC)*numpy.cos(TH-numpy.arcsin((S1*numpy.sin(2.0*TH))/ \
+                numpy.sqrt(S1**2.0+S2**2.0+2.0*S1*S2*numpy.cos(2.0*TH)))))**2.0)*numpy.sin(TH)**2.0)+ \
+                (X-XC)*numpy.sin(TH-numpy.arcsin((S1*numpy.sin(2.0*TH))/numpy.sqrt(S1**2.0+S2**2.0+2.0*S1*S2*numpy.cos(2*TH)))))
+
+
+    return y
+
 def cdf(sy, sz, method = 1 ):
     """
      cdf: Calculates the profile from the slope by simple integration
@@ -285,13 +310,14 @@ def main():
     #aspheric fit
     #
 
-    # fit_method = 0   fit aspherical profile, use curve_fit on heights (NOT WORKING)
-    # fit_method = 1   fit aspherical profile, use leastsq on heights (NOT WORKING)
-    # fit_method = 2   fit aspherical profile, use bounded leastsq on heights (NOT WORKING)
-    # fit_method = 3   fit elliptical profile
+    # fit_method = 0   fit aspherical heights, use curve_fit on heights (NOT WORKING)
+    # fit_method = 1   fit aspherical heights, use leastsq on heights (NOT WORKING)
+    # fit_method = 2   fit aspherical heights, use bounded leastsq on heights (NOT WORKING)
+    # fit_method = 3   fit elliptical heights
     # fit_method = 4   fit elliptical slopes
+    # fit_method = 5   fit elliptical heights using Xianbo method
 
-    fit_method = 3
+    fit_method = 5
 
     if fit_method == 0: # use curve_fit
         popt, pcov = curve_fit(func_aspheric, y0, z0)
@@ -559,7 +585,110 @@ def main():
         numpy.savetxt(outFile,dd)
         print ("File "+outFile+" written to disk:\n")
 
+    if fit_method == 5: # ellipse fitting heights using Xianbo method
 
+        ibounded = 2 #=0 curve_fit (no guess), 1=leastsq, 2=bounded
+
+        print("======== Fitting heights =======")
+
+        if ibounded == 0:
+            print("======== Curve fitting without guess =======")
+            popt, cov_x = curve_fit(func_ellipse_xianbo, y0, z0, maxfev=10000)
+        else:
+            #dabam-4 (Amparo)
+            # p0 = 98.00
+            # q0 = 0.0775
+            # theta0 = 3.9e-3
+            # OFFSET = 0.0
+            # XC = 0.0
+            # #
+            # #dabam-6 (Soleil) p=499.14 mm q= 4500 mm teta = 34.99 mrad
+            # p0 = 499.14e-3
+            # q0 = 4500e-3
+            # theta0 = 34.99e-3
+            # OFFSET = 0.0
+            # XC = 0.0
+            # #
+            # #dabam-19 #design parameter of ellipse: entrance arm: 420000mm; exit arm: 900mm; angle of incidence 3.052mrad
+            # p0 = 420.0
+            # q0 = 0.9
+            # theta0 =  3.052e-3
+            # OFFSET = 0.0
+            # XC = 0.0
+            # #
+            # #dabam-20 #design parameter of ellipse: entrance arm 9000mm; exit arm: 350mm; angle of incidence: 2.5deg
+            p0 = 9.0
+            q0 = 0.35
+            theta0 =  2.5*numpy.pi/180
+            OFFSET = 0.0
+            XC = 75e-3
+            # #TODO:
+            # zp0 = -zp0
+            # #
+            # #dabam-21 #design parameter of ellipse: entrance arm: 7500mm; exit arm: 2500mm; angle of incidence 0.6deg
+            # p0 = 7.5
+            # q0 = 2.5
+            # theta0 =  0.6*numpy.pi/180
+            # OFFSET = 0.0
+            # XC = 0.0
+
+            p_guess = [p0,q0,theta0, OFFSET, XC]
+            z1 = func_ellipse_xianbo(yp0, p_guess[0], p_guess[1], p_guess[2], p_guess[3], p_guess[4])
+
+            # ishift = 0
+            # if ishift:
+            #     print(">>>>>>>> slope zp0[0], zp1[0], diff: ",zp0[0],zp1[1],zp0[0]-zp1[1])
+            #     print(">>>>>>>>>>>>>>>>>>> shift value: ",(zp0-zp1)[1])
+            #     p_guess[3]  = (zp0-zp1)[1]
+            #     zp1 = func_ellipse(yp0, p_guess[0], p_guess[1], p_guess[2], p_guess[3])
+
+            print("p0,q0,theta,OFFSET,XC: ",p0,q0,theta0,OFFSET,XC)
+
+            fitfunc_ell_heights = lambda p, x: func_ellipse_xianbo(x, p[0], p[1], p[2], p[3], p[4])
+            errfunc_ell_heights = lambda p, x, y: fitfunc_ell_heights(p, x) - y
+
+            if ibounded == 1:
+                print("======== Least Squares fitting =======")
+                popt, cov_x, infodic, mesg, ier = leastsq(errfunc_ell_heights, p_guess, args=(y0, z0),
+                                                          full_output=True)
+            else:
+                print("======== Bounded Least Squares fitting =======")
+                # https://github.com/jjhelmus/leastsqbound-scipy
+                from leastsqbound import leastsqbound
+                bounds = [ (p0*0.998,p0*1.002) , (q0*0.8,q0*1.2), (theta0*0.98,theta0*1.02),
+                           (OFFSET*0.9,OFFSET*1.2), (XC*0.9,XC*1.2)]
+                popt, cov_x, infodic, mesg, ier = leastsqbound(errfunc_ell_heights, p_guess, args=(y0,z0),
+                                                            bounds=bounds,full_output=True)
+
+
+            print("cov_x:", cov_x)
+            # print("infodic['nfev']:", infodic['nfev'])
+            # print("infodic['fvec']:", infodic['fvec'])
+            # print("infodic['fjac']:", infodic['fjac'])
+            # print("infodic['ipvt']:", infodic['ipvt'])
+            # print("infodic['qtf']:", infodic['qtf'])
+            # print("mesg:", mesg)
+            # print("ier:", ier)
+
+            print(">>>>> p_guess:", p_guess)
+            #zp1 = func_ellipse_slopes(yp0, p_guess[0], p_guess[1], p_guess[2], 0.0 ) #p_guess[3]) #TODO!!
+            dd=numpy.concatenate( (y0, z1) ,axis=0).reshape(2,-1).transpose()
+            outFile = "tmp_z1.dat"
+            numpy.savetxt(outFile,dd)
+            print ("File "+outFile+" written to disk:\n")
+
+
+
+        print(">>>>> popt (p,q,theta): ",popt)
+
+        z2 = func_ellipse_xianbo(y0, popt[0], popt[1], popt[2], popt[3], popt[4])
+        #amparo z2 = func_ellipse(y0, 98.0, 81.826e-3, 3.865*1e-3)
+        if ibounded != 0: print ('Height error RMS z0-z1:             %.3f nm'%(1e9*(z0-z1).std()))
+        print ('height error RMS z0-z2:             %.3f nm'%(1e9*(z0-z2).std()))
+        dd=numpy.concatenate( (y0, z2) ,axis=0).reshape(2,-1).transpose()
+        outFile = "tmp_z2.dat"
+        numpy.savetxt(outFile,dd)
+        print ("File "+outFile+" written to disk:\n")
 
     #
     #plots
@@ -591,7 +720,7 @@ def main():
             plt.title("residual slopes")
             plt.xlabel("Y [mm]")
             plt.ylabel("Zp [urad]")
-        elif fit_method == 3: #heights
+        elif (fit_method == 3 or fit_method == 5): #heights
             f1 = plt.figure(1)
             ax = plt.gca()
             ax.get_xaxis().get_major_formatter().set_useOffset(False)
