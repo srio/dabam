@@ -9,14 +9,10 @@
     <link type="text/css" rel="stylesheet" href="css/dabam.css">
     <title>DABAM - Profiles Submission Form</title>
   </head>
-  <body> <!--
-{  "FILE_FORMAT": 1,   "FILE_HEADER_LINES": 4,   "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06,   "YEAR_FABRICATION": null,   "SURFACE_SHAPE": "plane",   "FUNCTION": null, 
-  "LENGTH": 1.36,   "WIDTH": 0.16,   "THICK": 0.05,   "LENGTH_OPTICAL": 1.2, 
-  "SUBSTRATE": "silicon",   "COATING": null,   "FACILITY": "ESRF",   "INSTRUMENT": null, 
-  "POLISHING": null,   "ENVIRONMENT": null,   "SCAN_DATE": null,   "PLOT_TITLE_X1": "x(mm)", 
-  "PLOT_TITLE_Y1": "Slope (urad)",   "CALC_HEIGHT_RMS": null,   "CALC_HEIGHT_RMS_FACTOR": null,   "CALC_SLOPE_RMS": null, 
-  "CALC_SLOPE_RMS_FACTOR": null,   "USER_EXAMPLE": "This is an example of user keyword"}-->
+  <body>
+    <!--
+{  "FILE_FORMAT": 1,   "FILE_HEADER_LINES": 4,   "X1_FACTOR": 0.001,   "Y1_FACTOR": 1e-06,   "YEAR_FABRICATION": null,   "SURFACE_SHAPE": "plane",   "FUNCTION": null,   "LENGTH": 1.36,   "WIDTH": 0.16,   "THICK": 0.05,   "LENGTH_OPTICAL": 1.2,   "SUBSTRATE": "silicon",   "COATING": null,   "FACILITY": "ESRF",   "INSTRUMENT": null, 
+  "POLISHING": null,   "ENVIRONMENT": null,   "SCAN_DATE": null,   "PLOT_TITLE_X1": "x(mm)",   "PLOT_TITLE_Y1": "Slope (urad)",   "CALC_HEIGHT_RMS": null,   "CALC_HEIGHT_RMS_FACTOR": null,   "CALC_SLOPE_RMS": null,   "CALC_SLOPE_RMS_FACTOR": null,   "USER_EXAMPLE": "This is an example of user keyword"}-->
     <div class="form-style-10">
       <h1>DABAM <span>an open-source database of x-ray mirrors metrology</span><span>&nbsp;<br>
           PROFILES SUBMISSION FORM</span></h1>
@@ -156,8 +152,7 @@
                   </select>
                 </td>
                 <td> <label>Polishing Method</label> </td>
-                <td style="padding: 10px"> <input style="width:150px"
-                    name="POLISHING"
+                <td style="padding: 10px"> <input style="width:150px" name="POLISHING"
                     type="Text">
                 </td>
               </tr>
@@ -168,6 +163,10 @@
         <div class="inner-wrap">
           <table>
             <tbody>
+              <tr>
+                <td> <label>Profile File</label></td>
+                <td colspan="3"><input name="dabamfile" id="dabamfile" type="file"></td>
+              </tr>
               <tr>
                 <td> <label>Date of the measurement<br>
                     in format YYYYMMDD</label> </td>
@@ -222,7 +221,7 @@
                       name="USER_EXAMPLE">This
                       is an example of user keyword</textarea></label> </td>
               </tr>
-            </tbody>
+             </tbody>
           </table>
         </div>
         <div class="button-section" style="text-align:right"> <input name="Submit"
@@ -231,5 +230,6 @@
         </div>
       </form>
     </div>
+    
   </body>
 </html>
