@@ -29,7 +29,7 @@
                     </select>
                 </td>
                 <td style="padding: 10px"> <label>Number of header lines in the data file</label> </td>
-                <td style="padding: 10px"><input required style="width:60px" name="FILE_HEADER_LINES"
+                <td style="padding: 10px"><input required style="width:60px" name="FILE_HEADER_LINES" id="FILE_HEADER_LINES"
                       value="4"
                       type="number">
                 </td>
@@ -40,6 +40,7 @@
                 </td>
                 <td colspan="2" style="padding: 10px"><input required style="width:100px; text-align:right"
                       name="X1_FACTOR"
+                      id="X1_FACTOR"
                       value="0.001"
                       type="Text">
                 </td>
@@ -49,6 +50,7 @@
                     units for the column index  1</label>
                 <td colspan="2" style="padding: 10px"><input required style="width:100px; text-align:right"
                       name="Y1_FACTOR"
+                      id="Y1_FACTOR"
                       value="1e-06"
                       type="Text">
                 </td>
@@ -69,8 +71,9 @@
                     type="Text">
                 </td>
                 <td> <label>Length in SI units [m]</label> </td>
-                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="LENGTH"
+                    id="LENGTH"
                     value="1.36"
                     type="Text">
                 </td>
@@ -90,6 +93,7 @@
                 <td> <label>Width in SI units [m]</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="WIDTH"
+                    id="WIDTH"
                     value="0.16"
                     type="Text">
                 </td>
@@ -107,6 +111,7 @@
                 <td> <label>Thickness in SI units [m]</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="THICK"
+                    id="THICK"
                     value="0.05"
                     type="Text">
                 </td>
@@ -117,6 +122,7 @@
                     (usually the scan length)</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="LENGTH_OPTICAL"
+                    id="LENGTH_OPTICAL"
                     value="1.20"
                     type="Text">
                 </td>
@@ -127,22 +133,22 @@
               </tr>
               <tr>
                 <td> <label>Instrument type used</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="INSTRUMENT"
+                <td style="padding: 10px"> <input required style="width:150px" name="INSTRUMENT" id="INSTRUMENT"
                     type="Text">
                 </td>
                 <td> <label>Mirror Substrate</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="SUBSTRATE"
+                <td style="padding: 10px"> <input required style="width:150px" name="SUBSTRATE" id="SUBSTRATE"
                     type="Text">
                 </td>
               </tr>
               <tr>
                 <td> <label>Facility where data<br>
                     has been measured</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="FACILITY"
+                <td style="padding: 10px"> <input required style="width:150px" name="FACILITY" id="FACILITY"
                     type="Text">
                 </td>
                 <td> <label>Mirror Coating</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="COATING"
+                <td style="padding: 10px"> <input required style="width:150px" name="COATING" id="COATING"
                     type="Text">
                 </td>
               </tr>
@@ -157,7 +163,7 @@
                   </select>
                 </td>
                 <td> <label>Polishing Method</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="POLISHING"
+                <td style="padding: 10px"> <input required style="width:150px" name="POLISHING" id="POLISHING"
                     type="Text">
                 </td>
               </tr>
@@ -177,18 +183,20 @@
                     in format YYYYMMDD</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="SCAN_DATE"
+                    id="SCAN_DATE"
                     type="Text">
                 </td>
                 <td> <label>Heights RMS value<br>
                     in user's units</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="CALC_HEIGHT_RMS"
+                    id="CALC_HEIGHT_RMS"
                     type="Text">
                 </td>
               </tr>
               <tr>
                 <td> <label>X Axis Plot Title</label> </td>
-                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_X1"
+                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_X1" id="PLOT_TITLE_X1"
                     value="x (mm)"
                     type="Text">
                 </td>
@@ -196,12 +204,13 @@
                     from user's unit to SI (m)</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="CALC_HEIGHT_RMS_FACTOR"
+                    id="CALC_HEIGHT_RMS_FACTOR"
                     type="Text">
                 </td>
               </tr>
               <tr>
                 <td> <label>Y Axis Plot Title</label> </td>
-                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_Y1"
+                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_Y1" id="PLOT_TITLE_Y1"
                     value="Slope (urad)"
                     type="Text">
                 </td>
@@ -209,6 +218,7 @@
                     in user's units</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="CALC_SLOPE_RMS"
+                    id="CALC_SLOPE_RMS"
                     type="Text">
                 </td>
               </tr>
@@ -218,6 +228,7 @@
                     from user's unit to SI (rad)</label> </td>
                 <td style="padding: 10px"> <input required style="width:100px; text-align:right"
                     name="CALC_SLOPE_RMS_FACTOR"
+                    id="CALC_SLOPE_RMS_FACTOR"
                     type="Text">
                 </td>
               </tr>
