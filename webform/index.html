@@ -1,173 +1,235 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
-<meta http-equiv="keywords" content="DABAM" />
-<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
-<meta http-equiv="description" content="DABAM" />
-<link href="/notes/css/style.css" rel="stylesheet" type="text/css" />
-<title>DABAM</title>
-    <title>Example form</title>
-    <style type="text/css">
-    .container {
-        width: 200px;
-        clear: both;
-    }
-    .container input {
-        width: 100%;
-        clear: both;
-    }
-
-    </style>
-</head>
-<body>
-
-<!--
-{
-  "FILE_FORMAT": 1, 
-  "FILE_HEADER_LINES": 4, 
-  "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06, 
-  "YEAR_FABRICATION": null, 
-  "SURFACE_SHAPE": "plane", 
-  "FUNCTION": null, 
-  "LENGTH": 1.36, 
-  "WIDTH": 0.16, 
-  "THICK": 0.05, 
-  "LENGTH_OPTICAL": 1.2, 
-  "SUBSTRATE": "silicon", 
-  "COATING": null, 
-  "FACILITY": "ESRF", 
-  "INSTRUMENT": null, 
-  "POLISHING": null, 
-  "ENVIRONMENT": null, 
-  "SCAN_DATE": null, 
-  "PLOT_TITLE_X1": "x(mm)", 
-  "PLOT_TITLE_Y1": "Slope (urad)", 
-  "CALC_HEIGHT_RMS": null, 
-  "CALC_HEIGHT_RMS_FACTOR": null, 
-  "CALC_SLOPE_RMS": null, 
-  "CALC_SLOPE_RMS_FACTOR": null, 
-  "USER_EXAMPLE": "This is an example of user keyword"
-}
--->
-
-<div align="center">
-<form method="POST" action="upload_file.php" enctype="multipart/form-data">
-<pre>
-Fileformat <select id="cmbFileformat" name="FILE_FORMAT">
-     <option value="1">Slope</option>
-     <option value="2">Height</option>
-</select><br />
-
-<label>FILE_HEADER_LINES
-<INPUT TYPE = "Number" VALUE ="4" NAME = "FILE_HEADER_LINES">
-</label>
-<label>X1_FACTOR
-<INPUT TYPE = "Text" VALUE ="0.001" NAME = "X1_FACTOR">
-</label>
-<label>
-Y1_FACTOR
-<INPUT TYPE = "Text" VALUE ="1e-06" NAME = "Y1_FACTOR">
-</label>
-<label>
-YEAR_FABRICATION
-<INPUT TYPE = "Text" VALUE ="" NAME = "YEAR_FABRICATION"> 
-</label>
-<label>
-Fileformat 
-<select id="SURFACE_SHAPE" name="SURFACE_SHAPE">
-     <option value="plane">Plane</option>
-</select>
-</label>
-<label>
-FUNCTION
-<INPUT TYPE = "Text" VALUE ="" NAME = "FUNCTION"> 
-</label>
-<label>
-LENGTH
-<INPUT TYPE = "Text" VALUE ="1.36" NAME = "LENGTH"> 
-</label>
-<label>
-WIDTH
-<INPUT TYPE = "Text" VALUE ="0.16" NAME = "WIDTH"> 
-</label>
-<label>
-THICK
-<INPUT TYPE = "Text" VALUE ="0.05" NAME = "THICK"> 
-</label>
-<label>
-LENGTH_OPTICAL
-<INPUT TYPE = "Text" VALUE ="1.2" NAME = "LENGTH_OPTICAL"> 
-</label>
-<label>
-SUBSTRATE
-<select id="SUBSTRATE" name="SUBSTRATE">
-     <option value="silicon">Silicon</option>
-</select>
-</label>
-<label>
-COATING
-<INPUT TYPE = "Text" VALUE ="" NAME = "COATING">
-<label>
-FACILITY
-<select id="FACILITY" name="FACILITY">
-     <option value="ESRF">ESRF</option>
-</select>
-</label>
-<label>
-INSTRUMENT
-<INPUT TYPE = "Text" VALUE ="" NAME = "INSTRUMENT">
-</label>
-<label>
-POLISHING
-<INPUT TYPE = "Text" VALUE ="" NAME = "POLISHING">
-</label>
-<label>
-ENVIRONMENT
-<INPUT TYPE = "Text" VALUE ="" NAME = "ENVIRONMENT">
-</label>
-<label>
-SCAN_DATE
-<INPUT TYPE = "Text" VALUE ="" NAME = "SCAN_DATE">
-</label>
-<label>
-PLOT_TITLE_X1
-<INPUT TYPE = "Text" VALUE ="x(mm)" NAME = "PLOT_TITLE_X1">
-</label>
-<label>
-PLOT_TITLE_Y1
-<INPUT TYPE = "Text" VALUE ="Slope (urad)" NAME = "PLOT_TITLE_Y1">
-</label>
-<label>
-CALC_HEIGHT_RMS
-<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_HEIGHT_RMS">
-</label>
-<label>
-CALC_HEIGHT_RMS_FACTOR
-<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_HEIGHT_RMS_FACTOR">
-</label>
-<label>
-CALC_SLOPE_RMS
-<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_SLOPE_RMS">
-</label>
-<label>
-CALC_SLOPE_RMS_FACTOR
-<INPUT TYPE = "Text" VALUE ="" NAME = "CALC_SLOPE_RMS_FACTOR">
-</label>
-<label>
-USER_EXAMPLE
-<INPUT TYPE = "Text" VALUE ="This is an example of user keyword" NAME = "USER_EXAMPLE">
-</label>
-<label>
-Filename
-<input type="file" name="dabamfile" id="dabamfile"><br>
-</label>
-<input type="submit" name="Submit" value="Submit"/>
-</form>
-</div>
-
-</html>
-</body>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=windows-1251" http-equiv="content-type">
+    <meta content="DABAM" http-equiv="keywords">
+    <meta content="NO-CACHE" http-equiv="CACHE-CONTROL">
+    <meta content="NO-CACHE" http-equiv="PRAGMA">
+    <meta content="DABAM" http-equiv="description">
+    <link type="text/css" rel="stylesheet" href="css/dabam.css">
+    <title>DABAM - Profiles Submission Form</title>
+  </head>
+  <body> <!--
+{  "FILE_FORMAT": 1,   "FILE_HEADER_LINES": 4,   "X1_FACTOR": 0.001, 
+  "Y1_FACTOR": 1e-06,   "YEAR_FABRICATION": null,   "SURFACE_SHAPE": "plane",   "FUNCTION": null, 
+  "LENGTH": 1.36,   "WIDTH": 0.16,   "THICK": 0.05,   "LENGTH_OPTICAL": 1.2, 
+  "SUBSTRATE": "silicon",   "COATING": null,   "FACILITY": "ESRF",   "INSTRUMENT": null, 
+  "POLISHING": null,   "ENVIRONMENT": null,   "SCAN_DATE": null,   "PLOT_TITLE_X1": "x(mm)", 
+  "PLOT_TITLE_Y1": "Slope (urad)",   "CALC_HEIGHT_RMS": null,   "CALC_HEIGHT_RMS_FACTOR": null,   "CALC_SLOPE_RMS": null, 
+  "CALC_SLOPE_RMS_FACTOR": null,   "USER_EXAMPLE": "This is an example of user keyword"}-->
+    <div class="form-style-10">
+      <h1>DABAM <span>an open-source database of x-ray mirrors metrology</span><span>&nbsp;<br>
+          PROFILES SUBMISSION FORM</span></h1>
+      <form enctype="multipart/form-data" action="upload_file.php" method="POST">
+        <div class="section"><span>1</span>File Format</div>
+        <div class="inner-wrap">
+          <table>
+            <tbody>
+              <tr>
+                <td> <label>Type of file used&nbsp;&nbsp;&nbsp;
+                    <select style="width:200px" name="FILE_FORMAT" id="FILE_FORMAT">
+                      <option value="1">Slope</option>
+                      <option value="2">Height</option>
+                    </select>
+                  </label> </td>
+                <td style="padding: 20px"> <label>Number of header lines in the
+                    data file&nbsp;&nbsp;&nbsp;<input style="width:60px" name="FILE_HEADER_LINES"
+                      value="4"
+                      type="Number"></label>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2"> <label>Conversion factor from user units to SI
+                    units for the column index 0&nbsp;&nbsp;&nbsp;<input style="width:100px; text-align:right"
+                      name="X1_FACTOR"
+                      value="0.001"
+                      type="Text"></label>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2"> <label>Conversion factor from user units to SI
+                    units for the column index 1&nbsp;&nbsp;&nbsp;<input style="width:100px; text-align:right"
+                      name="Y1_FACTOR"
+                      value="1e-06"
+                      type="Text"></label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="section"><span>2</span>Mirror Data</div>
+        <div class="inner-wrap">
+          <table>
+            <tbody>
+              <tr>
+                <td> <label>Year of fabrication</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="YEAR_FABRICATION"
+                    type="Text">
+                </td>
+                <td> <label>Length in SI units [m]</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="LENGTH"
+                    value="1.36"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>Type of Mirror</label> </td>
+                <td style="padding: 10px">
+                  <select style="width:200px" name="SURFACE_SHAPE" id="SURFACE_SHAPE">
+                    <option value="Plane">Plane</option>
+                    <option value="Spherical">Spherical</option>
+                    <option value="Elliptical">Spherical</option>
+                    <option value="Parabolic">Parabolic</option>
+                    <option value="Toroidal">Toroidal</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </td>
+                <td> <label>Width in SI units [m]</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="WIDTH"
+                    value="0.16"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>Function</label> </td>
+                <td style="padding: 10px">
+                  <select style="width:200px" name="FUNCTION" id="FUNCTION">
+                    <option value="White Beam Mirror">White Beam Mirror</option>
+                    <option value="Collimating Mirror">Collimating Mirror</option>
+                    <option value="Focusing Mirror">Focusing Mirror</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </td>
+                <td> <label>Thickness in SI units [m]</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="THICK"
+                    value="0.05"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2"> &nbsp; </td>
+                <td> <label>Optical Length SI units [m]<br>
+                    (usually the scan length)</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="LENGTH_OPTICAL"
+                    value="1.20"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td colspan="4">
+                  <hr style="color: #ffffff"> </td>
+              </tr>
+              <tr>
+                <td> <label>Instrument type used</label> </td>
+                <td style="padding: 10px"> <input style="width:150px" name="INSTRUMENT"
+                    type="Text">
+                </td>
+                <td> <label>Mirror Substrate</label> </td>
+                <td style="padding: 10px"> <input style="width:150px" name="SUBSTRATE"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>Facility where data<br>
+                    has been measured</label> </td>
+                <td style="padding: 10px"> <input style="width:150px" name="FACILITY"
+                    type="Text">
+                </td>
+                <td> <label>Mirror Coating</label> </td>
+                <td style="padding: 10px"> <input style="width:150px" name="COATING"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>Environment</label> </td>
+                <td style="padding: 10px">
+                  <select style="width:200px" name="ENVIRONMENT" id="ENVIRONMENT">
+                    <option value="Clamped">Clamped</option>
+                    <option value="Gravity Direction">Gravity Direction</option>
+                    <option value="Cooling System">Cooling System</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </td>
+                <td> <label>Polishing Method</label> </td>
+                <td style="padding: 10px"> <input style="width:150px"
+                    name="POLISHING"
+                    type="Text">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="section"><span>3</span>Profile Data</div>
+        <div class="inner-wrap">
+          <table>
+            <tbody>
+              <tr>
+                <td> <label>Date of the measurement<br>
+                    in format YYYYMMDD</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="SCAN_DATE"
+                    type="Text">
+                </td>
+                <td> <label>Heights RMS value<br>
+                    in user's units</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="CALC_HEIGHT_RMS"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>X Axis Plot Title</label> </td>
+                <td style="padding: 10px"> <input style="width:200px" name="PLOT_TITLE_X1"
+                    value="x (mm)"
+                    type="Text">
+                </td>
+                <td> <label>Conversion factor<br>
+                    from user's unit to SI (m)</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="CALC_HEIGHT_RMS_FACTOR"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td> <label>Y Axis Plot Title</label> </td>
+                <td style="padding: 10px"> <input style="width:200px" name="PLOT_TITLE_Y1"
+                    value="Slope (urad)"
+                    type="Text">
+                </td>
+                <td> <label>Slopes RMS value<br>
+                    in user's units</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="CALC_SLOPE_RMS"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2"> &nbsp; </td>
+                <td> <label>Conversion factor<br>
+                    from user's unit to SI (rad)</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
+                    name="CALC_SLOPE_RMS_FACTOR"
+                    type="Text">
+                </td>
+              </tr>
+              <tr>
+                <td colspan="4"> <label>User's keywords <textarea style="display:block"
+                      name="USER_EXAMPLE">This
+                      is an example of user keyword</textarea></label> </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="button-section" style="text-align:right"> <input name="Submit"
+            value="Submit Profile"
+            type="submit">
+        </div>
+      </form>
+    </div>
+  </body>
 </html>
