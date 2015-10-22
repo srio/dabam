@@ -168,7 +168,6 @@ function sendEmail($email_content)
     return $ok;
 }
 
-
 if ($_FILES["dabamfile"]["error"] > 0) 
   {
   echo "Error: " . $_FILES["file"]["error"] . "<br>";
