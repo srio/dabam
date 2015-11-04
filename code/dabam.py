@@ -20,6 +20,7 @@ dabam: (dataBase for metrology)
        MODIFICATION HISTORY:
            20130902 srio@esrf.eu, written
            20131109 srio@esrf.eu, added command line arguments, access metadata
+           20151103 srio@esrf.eu, restructured to OO
 
 """
 
@@ -29,21 +30,851 @@ __copyright = "ESRF, 2013-2015"
 
 
 import numpy
+import argparse # to manage input parameters from command-line argument
+import sys
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+import json
+from io import StringIO
 
 
 
-#
-#testing OO way
-#
 class dabam(object):
-    def __init__(self,dictionnary={}):
-        self.inputs = dictionnary
+    def __init__(self):
+        self.description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/dabam/Readme.md"
+
+        self.server = "http://ftp.esrf.eu/pub/scisoft/dabam/data/"
+
+        self.inputs = {
+            'entryNumber':1,         # 'an integer indicating the DABAM entry number'
+            'verbose':True, #False,         # 'print some debugging messages. Default is No'
+            'localFileRoot':None,    # 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
+            'rootFile':"", # "tmp",        # 'Define the root for output files. Default is "tmp"'
+            'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
+            'histoCalc':False,       # 'Calculate histograms. Default=No'
+            'histoB':1e-7,           # 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
+            'shadowCalc':False,      # 'Write file with mesh for SHADOW. Default=No'
+            'shadowNy':199,          # 'For SHADOW file, the number of points along Y (length). Default=199'
+            'shadowNx':11,           # 'For SHADOW file, the number of points along X (width). Default=11'
+            'shadowWidth':6.0,       # 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
+            'multiply':1.0,          # 'Multiply input profile (slope or height) by this number (to play with RMS values). Default=1.0'
+            'useHeightsOrSlopes':-1, # 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
+            'useAbscissasColumn':0,  # 'Use abscissas column index. Default=0'
+            'useOrdinatesColumn':1,  # 'Use ordinates column index. Default=1'
+            'plot':None,#
+            }
+        #to load profiles:
+        self.h           = None # metadata
+        self.a           = None # raw datafile
+        self.sy          = None # abscissa along the mirror
+        self.sz1         = None # undetrended slope profile
+        self.sz          = None # detrended slope profile
+        self.zprof1      = None # undetrended heights profile
+        self.zprof       = None # detrended heights profile
+        self.coeffs      = None # information on detrending (polynomial coeffs)
+        self.f           = None # frequency of Power Spectral Density
+        self.psdHeights  = None # Power Spectral Density of Heights profile
+        self.psdSlopes   = None # Power Spectral Density of slopes profile
+        self.cdfHeights  = None # PDF integral of Heights profile
+        self.cdfSlopes   = None # PDF integral of Slopes profile
+
+    #
+    #setters
+    #
+
+    #variables
+    def set_input_entryNumber(self,value):
+        self.inputs["entryNumber"] = value
+    def set_input_verbose            (self,value):
+        self.inputs["verbose"] = value
+    def set_input_localFileRoot      (self,value):
+        self.inputs["localFileRoot"] = value
+    def set_input_rootFile           (self,value):
+        self.inputs["rootFile"] = value
+    def set_input_setDetrending      (self,value):
+        self.inputs["setDetrending"] = value
+    def set_input_histoCalc          (self,value):
+        self.inputs["histoCalc"] = value
+    def set_input_histoB             (self,value):
+        self.inputs["histoB"] = value
+    def set_input_shadowCalc         (self,value):
+        self.inputs["shadowCalc"] = value
+    def set_input_shadowNy           (self,value):
+        self.inputs["shadowNy"] = value
+    def set_input_shadowNx           (self,value):
+        self.inputs["shadowNx"] = value
+    def set_input_shadowWidth        (self,value):
+        self.inputs["shadowWidth"] = value
+    def set_input_multiply           (self,value):
+        self.inputs["multiply"] = value
+    def set_input_useHeightsOrSlopes (self,value):
+        self.inputs["useHeightsOrSlopes"] = value
+    def set_input_useAbscissasColumn (self,value):
+        self.inputs["useAbscissasColumn"] = value
+    def set_input_useOrdinatesColumn (self,value):
+        self.inputs["useOrdinatesColumn"] = value
+    def set_input_plot               (self,value):
+        self.inputs["plot"] = value
+
+    #others
+
+    def set_from_command_line(self):
+        #
+        # define default aparameters taken from command arguments
+        #
+        parser = argparse.ArgumentParser(description=self.description)
+        # main argument
+        parser.add_argument('entryNumber', nargs='?', metavar='N', type=int, default=self.get_input_value('entryNumber'),
+            help=self.get_input_value_help('entryNumber'))
+
+        # options
+
+        parser.add_argument('-'+self.get_input_value_short_name('verbose'),'--verbose', action='store_true', help=self.get_input_value_help('verbose'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('localFileRoot'), '--localFileRoot', help=self.get_input_value_help('localFileRoot'))
+
+        parser.add_argument('-'+self.get_input_value('rootFile'), '--rootFile', default=self.get_input_value('rootFile'),
+            help=self.get_input_value_help('rootFile'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('setDetrending'), '--setDetrending', default=self.get_input_value('setDetrending'),
+            help=self.get_input_value_help('setDetrending'))
+
+
+        parser.add_argument('-'+self.get_input_value_short_name('histoCalc'), '--histoCalc', action='store_true',
+            help=self.get_input_value_help('histoCalc'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('histoB'), '--histoB', default=self.get_input_value('histoB'),
+            help=self.get_input_value_help('histoB'))
+
+
+        parser.add_argument('-'+self.get_input_value_short_name('shadowCalc'), '--shadowCalc', action='store_true',
+            help=self.get_input_value_help('shadowCalc'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('shadowNy'), '--shadowNy', default=self.get_input_value('shadowNy'),
+            help=self.get_input_value_help('shadowNy'))
+        parser.add_argument('-'+self.get_input_value_short_name('shadowNx'), '--shadowNx', default=self.get_input_value('shadowNx'),
+            help=self.get_input_value_help('shadowNx'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('shadowWidth'), '--shadowWidth', default=self.get_input_value('shadowWidth'),
+            help=self.get_input_value_help('shadowWidth'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('multiply'), '--multiply', default=self.get_input_value('multiply'),
+            help=self.get_input_value_help('multiply'))
+
+
+        parser.add_argument('-'+self.get_input_value_short_name('useHeightsOrSlopes'), '--useHeightsOrSlopes', default=self.get_input_value('useHeightsOrSlopes'),
+            help=self.get_input_value_help('useHeightsOrSlopes'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('useAbscissasColumn'), '--useAbscissasColumn', default=self.get_input_value('useAbscissasColumn'),
+            help=self.get_input_value_help('useAbscissasColumn'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('useOrdinatesColumn'), '--useOrdinatesColumn', default=self.get_input_value('useOrdinatesColumn'),
+            help=self.get_input_value_help('useOrdinatesColumn'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('plot'), '--plot', default=self.get_input_value('plot'),
+            help=self.get_input_value_help('plot'))
+
+
+        args = parser.parse_args()
+
+        self.set_input_entryNumber(args.entryNumber)
+        self.set_input_verbose(args.verbose)
+        self.set_input_localFileRoot(args.localFileRoot)
+        self.set_input_rootFile(args.rootFile)
+        self.set_input_setDetrending(args.setDetrending)
+        self.set_input_histoCalc(args.histoCalc)
+        self.set_input_histoB(args.histoB)
+        self.set_input_shadowCalc(args.shadowCalc)
+        self.set_input_shadowNy(args.shadowNy)
+        self.set_input_shadowNx(args.shadowNx)
+        self.set_input_shadowWidth(args.shadowWidth)
+        self.set_input_multiply(args.multiply)
+        self.set_input_useHeightsOrSlopes(args.useHeightsOrSlopes)
+        self.set_input_useAbscissasColumn(args.useAbscissasColumn)
+        self.set_input_useOrdinatesColumn(args.useHeightsOrSlopes)
+        self.set_input_plot(args.plot)
+
+
+    def set_inputs_from_dictionary(self,dict):
+        try:
+            self.inputs['entryNumber']        =  dict["entryNumber       "]
+            self.inputs['verbose']            =  dict["verbose           "]
+            self.inputs['localFileRoot']      =  dict["localFileRoot     "]
+            self.inputs['rootFile']           =  dict["rootFile          "]
+            self.inputs['setDetrending']      =  dict["setDetrending     "]
+            self.inputs['histoCalc']          =  dict["histoCalc         "]
+            self.inputs['histoB']             =  dict["histoB            "]
+            self.inputs['shadowCalc']         =  dict["shadowCalc        "]
+            self.inputs['shadowNy']           =  dict["shadowNy          "]
+            self.inputs['shadowNx']           =  dict["shadowNx          "]
+            self.inputs['shadowWidth']        =  dict["shadowWidth       "]
+            self.inputs['multiply']           =  dict["multiply          "]
+            self.inputs['useHeightsOrSlopes'] =  dict["useHeightsOrSlopes"]
+            self.inputs['useAbscissasColumn'] =  dict["useAbscissasColumn"]
+            self.inputs['useOrdinatesColumn'] =  dict["useOrdinatesColumn"]
+            self.inputs['plot']               =  dict["plot              "]
+        except:
+            print("Failed setting dabam input parameters from dictionary")
+
+    #
+    # tools
+    #
+    def remote_access(self):
+        if (self.get_input_value("localFileRoot") == None):
+            remoteAccess = 1  # 0=Local file, 1=Remote file
+        else:
+            remoteAccess = 0  # 0=Local file, 1=Remote file
+        return remoteAccess
+
+    #
+    #getters
+    #
+
+    def get_input_value(self,key):
+        try:
+            return self.inputs[key]
+        except:
+            return None
+
+    #todo: a test that checks all names defined everywhere
+    def get_inputs_as_dictionary(self):
+        return {
+            'entryNumber':        self.inputs.entryNumber       ,
+            'verbose':            self.inputs.verbose           ,
+            'localFileRoot':      self.inputs.localFileRoot     ,
+            'rootFile':           self.inputs.rootFile          ,
+            'setDetrending':      self.inputs.setDetrending     ,
+            'histoCalc':          self.inputs.histoCalc         ,
+            'histoB':             self.inputs.histoB            ,
+            'shadowCalc':         self.inputs.shadowCalc        ,
+            'shadowNy':           self.inputs.shadowNy          ,
+            'shadowNx':           self.inputs.shadowNx          ,
+            'shadowWidth':        self.inputs.shadowWidth       ,
+            'multiply':           self.inputs.multiply          ,
+            'useHeightsOrSlopes': self.inputs.useHeightsOrSlopes,
+            'useAbscissasColumn': self.inputs.useAbscissasColumn,
+            'useOrdinatesColumn': self.inputs.useOrdinatesColumn,
+            'plot':               self.inputs.plot              ,
+        }
+
+
+    def get_input_value_help(self,key):
+
+        if key == 'entryNumber':        return 'an integer indicating the DABAM entry number'
+        if key == 'verbose':            return 'print some debugging messages. Default is No'
+        if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
+        if key == 'rootFile':           return 'Define the root for output files. Default is "tmp"'
+        if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
+        if key == 'histoCalc':          return 'Calculate histograms. Default=No'
+        if key == 'histoB':             return 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
+        if key == 'shadowCalc':         return 'Write file with mesh for SHADOW. Default=No'
+        if key == 'shadowNy':           return 'For SHADOW file, the number of points along Y (length). Default=199'
+        if key == 'shadowNx':           return 'For SHADOW file, the number of points along X (width). Default=11'
+        if key == 'shadowWidth':        return 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
+        if key == 'multiply':           return 'Multiply input profile (slope or height) by this number (to play with RMS values). Default=1.0'
+        if key == 'useHeightsOrSlopes': return 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
+        if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=0'
+        if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=1'
+        if key == 'plot':               return 'Plot what? heights slopes psd_h psd_s cdf_h cdf_s. Default=None'
+
+        return ''
+
+
+    def get_input_value_short_name(self,key):
+
+        if key == 'entryNumber':         return 'N'
+        if key == 'verbose':             return 'v'
+        if key == 'localFileRoot':       return 'l'
+        if key == 'rootFile':            return 'r'
+        if key == 'setDetrending':       return 'D'
+        if key == 'histoCalc':           return 'H'
+        if key == 'histoB':              return 'b'
+        if key == 'shadowCalc':          return 's'
+        if key == 'shadowNy':            return 'y'
+        if key == 'shadowNx':            return 'x'
+        if key == 'shadowWidth':         return 'w'
+        if key == 'multiply':            return 'm'
+        if key == 'useHeightsOrSlopes':  return 'S'
+        if key == 'useAbscissasColumn':  return 'A'
+        if key == 'useOrdinatesColumn':  return 'O'
+        if key == 'plot':                return 'P'
+
+        return '?'
+
+
+    #
+    # file names
+    #
+    def file_metadata(self):
+        return self._file_root()+'.txt'
+
+    def file_data(self):
+        return self._file_root()+'.dat'
+
+
+
+
+
+
+    #
+    # load profile and store data. This is the main action!!
+    #
+
+    def load(self):
+
+        #load data and metadata
+
+        self._load_file_metadata()
+        self._load_file_data()
+
+        #test consistency
+        if (self.get_input_value("localFileRoot") == None):
+            if self.get_input_value("entryNumber") == 0:
+                raise Exception("Error: entry number cannot be zero for remote access.")
+
+        #calculate detrended profiles
+        self._load_profiles()
+
+        #calculate psd
+        self._calc_psd()
+
+
+
+        #
+        # write files
+        #
+        # write header file
+        if self.get_input_value("rootFile") != "":
+            outFile = self.get_input_value("rootFile") + "Header.txt"
+            with open(outFile, mode='w') as f1:
+                json.dump(self.h, f1, indent=2)
+            if self.inputs["verbose"]:
+                print ("File "+outFile+" containing metadata written to disk.")
+
+        #
+        # Dump heights and slopes profiles to files
+        #
+        if self.get_input_value("rootFile") != "":
+            outFile = self.inputs["rootFile"]+'Heights.dat'
+            dd=numpy.concatenate( (self.sy.reshape(-1,1), self.zprof.reshape(-1,1)),axis=1)
+            numpy.savetxt(outFile,dd)
+            if self.inputs["verbose"]:
+                print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
+
+            outFile = self.inputs["rootFile"]+'Slopes.dat'
+            dd=numpy.concatenate( (self.sy.reshape(-1,1), self.sz.reshape(-1,1)),axis=1)
+            numpy.savetxt(outFile,dd)
+            if self.inputs["verbose"]:
+                print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
+
+
+        #write psd file
+        if self.get_input_value("rootFile") != "":
+            dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, self.cdfHeights, self.cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
+            outFile = self.get_input_value("rootFile")+'PSD.dat'
+            numpy.savetxt(outFile,dd)
+            if self.inputs["verbose"]:
+                print ("File "+outFile+" written to disk:  Columns are:\n"+
+                   "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
+                   "              cdf(psd_prof),cdf(psd_slope).")
+
+        #calculate and write histograms
+        if self.get_input_value("histoCalc"):
+            hyc, hz, hg = self.calc_histograms()
+            # dump histogram to file (3 cols: center of bin, counts, Gaussian value)
+            if self.get_input_value("rootFile") != "":
+                dd=numpy.concatenate( (hyc, hz, hg ) ,axis=0).reshape(3,-1).transpose()
+                outFile = self.get_input_value("rootFile")+'Histo.dat'
+                numpy.savetxt(outFile,dd)
+                print ("File "+outFile+" written to disk. Cols: slope[rad], counts, Gaussian.")
+
+        #shadow file
+        if self.get_input_value("shadowCalc"):
+            self.write_file_for_shadow()
+
+        if self.inputs["verbose"]:
+            self.info_profiles()
+
+
+
+
+
+
+
+
+    #
+    #calculations
+    #
+
+    def stdev_profile_heights(self):
+        return self.zprof.std()
+
+    def stdev_profile_slopes(self):
+        return self.sz.std()
+
+    def stdev_psd_heights(self):
+        return ( numpy.sqrt(cdf(self.f,self.psdHeights)) ).max()
+
+    def stdev_psd_slopes(self):
+        return ( numpy.sqrt(cdf(self.f,self.psdHeights)) ).max()
+
+    def stdev_user_heights(self):
+        return self.h['CALC_HEIGHT_RMS']
+
+    def stdev_user_slopes(self):
+        return self.h['CALC_SLOPE_RMS']
+
+    def stdev_summary(self):
+
+        txt = ""
+        txt += 'Slope error s_RMS:             %.3f urad\n'       %( 1e6*self.stdev_profile_slopes() )
+        txt += '         from PSD:             %.3f urad\n'       %( 1e6*self.stdev_psd_slopes() )
+        txt += '         from USER (metadata): %s urad\n'         %(self.stdev_user_slopes())
+        txt += 'Shape error h_RMS:              %.3f nm\n'        %(1e9*self.stdev_profile_heights() )
+        txt += '         from PSD:              %.3f nm\n'        %(1e9*self.stdev_psd_heights() )
+        txt += '         from USER (metadata):  %s nm\n'          %(self.stdev_user_heights() )
+        txt += 'PV of height profile (before detrend): %.3f nm\n' %(1e9*(self.zprof1.max() - self.zprof1.min() ))
+        txt += 'PV of height profile (after detrend):  %.3f nm\n' %(1e9*(self.zprof.max() - self.zprof.min() ))
+
+        return txt
+
+
+
+
+    def calc_histograms(self):
+
+        sy    = self.sy
+        sz1    = self.sz1
+        sz    = self.sz
+        zprof1    = self.zprof1
+        zprof     = self.zprof
+        #;
+        #; histogram
+        #;
+        binsize = self.get_input_value("histoB") # default is 1e-7 rads
+        bins = numpy.ceil( (sz.max()-sz.min())/binsize )
+        hz,hy = numpy.histogram(sz, bins = bins)
+
+        #calculate positions of the center of the bins
+        hyc = hy+0.5*(hy[1]-hy[0])
+        hyc = hyc[0:-1]
+
+        #Gaussian
+        g = numpy.exp( -numpy.power(hyc-sz.mean(),2)/2/numpy.power(sz.std(),2) )
+        g = g/g.sum()*hz.sum()
+
+
+        return hyc, hz, g
+
+
+
+    #
+    # write things
+    #
+    def write_file_for_shadow(self):
+        #;
+        #;  write file for SHADOW (optional)
+        #;  replicate the (x,z) profile in a "s" mesh of npointsx * npointsy
+        #;
+
+        #inputs
+        npointsy = int(self.get_input_value("shadowNy"))
+        npointsx = int(self.get_input_value("shadowNx"))
+        mirror_width = self.get_input_value("shadowWidth") # in cm
+
+        # units to cm
+        y = self.sy * 100.0 # from m to cm
+        z = self.zprof * 100.0 # from m to cm
+
+        # set origin at the center of the mirror. TODO: allow any point for origin
+        z = z - z.min()
+        y = y - y[int(y.size/2)]
+
+
+        # interpolate the profile (y,z) to have npointsy points (new profile yy,zz)
+        mirror_length = y.max() - y.min()
+        yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
+        zz = numpy.interp(yy,y,z)
+
+        # dump to file interpolated profile (for fun)
+        dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
+        outFile = self.get_input_value("rootFile") + "ProfileInterpolatedForShadow.dat"
+        numpy.savetxt(outFile,dd)
+
+        # fill the mesh arrays xx,yy,s with interpolated profile yy,zz
+        xx=numpy.linspace(-mirror_width/2.0,mirror_width/2.0,npointsx)
+        s = numpy.zeros( (npointsy,npointsx) )
+        for i in range(npointsx):
+            s[:,i]=zz
+
+        # write Shadow file
+        outFile = self.get_input_value("rootFile") + "Shadow.dat"
+        tmp = write_shadowSurface(s,xx,yy,outFile=outFile)
+
+
+    #
+    # info
+    #
+
     def info(self):
         argsdict = self.inputs
         print ("-----------------------------------------------------")
         for i,j in argsdict.items():
             print ("dabam.info(): %s = %s" % (i,j))
         print ("-----------------------------------------------------")
+
+    def info_profiles(self):
+        # h = self._load_file_metadata()
+        # sy,sz1,sz,zprof1,zprof = self._load_profiles()
+
+
+
+        if int(self.get_input_value("setDetrending")) == -2: # this is the default
+            if (self.h['SURFACE_SHAPE']).lower() == "elliptical":
+                polDegree = -3     # elliptical detrending
+            else:
+                polDegree = 1      # linear detrending
+        else:
+            polDegree = int(self.get_input_value("setDetrending"))
+
+
+        #;
+        #; info
+        #;
+        #
+        print ('\n---------- profile results --------------------')
+        if (self.get_input_value("localFileRoot") == None):
+            print ('Remote directory:\n   %s'%self.server)
+        print ('Data File:     %s'%self.file_data())
+        print ('Metadata File: %s'%self.file_metadata())
+        print ('Surface shape: %s '%(self.h['SURFACE_SHAPE']))
+        print ('Facility:      %s'%(self.h['FACILITY']))
+        print ('Scan length: %.3f mm'%(1e3*(self.sy[-1]-self.sy[0])))
+        print ('Number of points: %d'%(len(self.sy)))
+
+        print ('   ')
+
+        if polDegree >= 0:
+            if polDegree == 1:
+                print ("Linear detrending: z'=%g x%+g"%(self.coeffs[0],self.coeffs[1]))
+                print ('Radius of curvature: %.3F m'%(1.0/self.coeffs[-2]))
+            else:
+                print ('Polynomial detrending coefficients: '+repr(self.coeffs))
+        elif polDegree == -1:
+           print ('No detrending applied.')
+        elif polDegree == -3:
+           print ('Ellipse detrending applied.')
+
+
+        cdfHeightsRMS = (numpy.sqrt(cdf(self.f,self.psdHeights))).max()
+        cdfSlopesRMS = (numpy.sqrt(cdf(self.f,self.psdSlopes))).max()
+
+        # print ('   ')
+        # print ('   ')
+        # print ('Slope error s_RMS:             %.3f urad'%(1e6*self.sz.std()))
+        # print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
+        # print ('         from USER (metadata): %s urad'%(self.h['CALC_SLOPE_RMS']))
+        # print ('Shape error h_RMS:              %.3f nm'%(1e9*self.zprof.std()))
+        # print ('         from PSD:              %.3f nm'%(1e9*cdfHeightsRMS))
+        # print ('         from USER (metadata):  %s nm'%(self.h['CALC_HEIGHT_RMS']))
+        # print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(self.zprof1.max() - self.zprof1.min() )))
+        # print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(self.zprof.max() - self.zprof.min() )))
+        # print ('   ')
+
+
+        print (self.stdev_summary())
+
+
+        # if (args.calcBoundaries == True):
+        #     print ('Diffraction/reflection boundary zones: ')
+        #     print ('   diffraction if h < h_cut, reflection if h > h_cut: ')
+        #     print ('   at wavelength [A]: ')+repr(wavelength*1e10)
+        #     print ('   at grazing angle [mrad]: ')+repr(theta*1e3)
+        #     print ('   ')
+        #     print ('   height cut h_cut [nm]: '+repr(  h_cut*1e9 ))
+        #     print ('   h_cut/h_RMS: '+repr(  h_cut_normalized ))
+        #     print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
+        #     print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
+
+        #todo: remove
+        print (self._latex_line())
+        print ('-------------------------------------------------\n')
+        print (' ')
+
+
+    def plot(self):
+        try:
+            from matplotlib import pylab as plt
+        except:
+            raise ImportError
+
+        what = self.get_input_value("plot")
+
+        print("plotting: ",what)
+        if (what == "heights" or what == "all"):
+            f1 = plt.figure(1)
+            plt.plot(1e3*self.sy,1e6*self.zprof)
+            plt.title("heights profile")
+            plt.xlabel("Y [mm]")
+            plt.ylabel("Z [um]")
+        if (what == "slopes" or what == "all"):
+            f2 = plt.figure(2)
+            plt.plot(1e3*self.sy,1e6*self.sz)
+            plt.title("slopes profile" or what == "all")
+            plt.xlabel("Y [mm]")
+            plt.ylabel("Zp [urad]")
+        if (what == "psd_h" or what == "all"):
+            f3 = plt.figure(3)
+            plt.loglog(self.f,self.psdHeights)
+            plt.title("PSD of heights profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("PSD [m^3]")
+        if (what == "psd_s" or what == "all"):
+            f4 = plt.figure(4)
+            plt.loglog(self.f,self.psdSlopes)
+            plt.title("PSD of slopes profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("PSD [rad^3]")
+        if (what == "cdf_h" or what == "all"):
+            f5 = plt.figure(5)
+            plt.semilogx(self.f,self.cdfHeights)
+            plt.title("Lambda CDF(PDF) of heights profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("heights Lambda")
+        if (what == "cdf_s" or what == "all"):
+            f6 = plt.figure(6)
+            plt.semilogx(self.f,self.cdfSlopes)
+            plt.title("Lambda CDF(PDF) of slopes profile")
+            plt.xlabel("f [m^-1]")
+            plt.ylabel("slopes Lambda")
+        plt.show()
+
+
+    #
+    # auxiliar methods for internal use
+    #
+    def _file_root(self):
+
+        if self.remote_access():
+            input_option = self.get_input_value("entryNumber")
+            inFileRoot = 'dabam-'+str(input_option)
+        else:
+            inFileRoot = self.get_input_value("localFileRoot")
+
+        return inFileRoot
+
+    def _load_file_metadata(self):
+        if self.remote_access():
+            # metadata file
+            myfileurl = self.server+self.file_metadata()
+            u = urlopen(myfileurl)
+            ur = u.read()
+            ur1 = ur.decode(encoding='UTF-8')
+            h = json.loads(ur1) # dictionnary with metadata
+            self.h = h
+        else:
+            try:
+                with open(self.file_metadata(), mode='r') as f1:
+                    h = json.load(f1)
+                self.h = h
+            except:
+                print ("_load_file_metadata: Error accessing local file: "+self.file_metadata())
+
+
+
+    def _load_file_data(self):
+        if self.remote_access():
+            # data
+            myfileurl = self.server+self.file_data()
+            try:
+                u = urlopen(myfileurl)
+            except:
+                print ("_load_file_data: Error accessing remote file: "+myfileurl+" does not exist.")
+                return None
+
+            ur = u.read()
+
+            skipLines = self.h['FILE_HEADER_LINES']
+
+            if sys.version_info[0] == 2:
+                ur = StringIO( unicode(ur) )
+            else:
+                ur = StringIO( ur.decode(encoding='ASCII') )
+
+            a = numpy.loadtxt(ur, skiprows=skipLines )
+            self.a = a
+        else:
+            try:
+                with open(self.file_data(), mode='r') as f1:
+                    h = json.load(f1)
+                skipLines = h['FILE_HEADER_LINES']
+                a = numpy.loadtxt(inFileDat, skiprows=skipLines) #, dtype="float64" )
+                self.a = a
+            except:
+                print ("Error accessing local file: "+self.file_data())
+
+
+    def _load_profiles(self):
+        """
+        Retrieve detrended profiles (slope and height): abscissa slope slope_detrended heights heights_detrended
+        :return:
+        """
+
+        #;
+        #; convert to SI units (m,rad)
+        #;
+        a = self.a.copy()
+
+        a[:,0] = a[:,0]*self.h['X1_FACTOR']
+        a[:,1] = a[:,1]*self.h['Y1_FACTOR']
+        ncols = a.shape[1]
+
+        if int(self.h["FILE_FORMAT"]) <= 2:
+            for i in range(2,ncols):    # X1 Y1 Y2 Y3...
+                a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
+        elif int(self.h["FILE_FORMAT"]) == 3: #X1 Y1 X2 Y2 etc
+            ngroups = int(ncols / 2)
+            icol = 1
+            for i in range(2,ngroups):    # X1 Y1 Y2 Y3...
+                icol += 1
+                a[:,icol] = a[:,icol]*self.h['X%d_FACTOR'%i]
+                icol += 1
+                a[:,icol] = a[:,icol]*self.h['Y%d_FACTOR'%i]
+
+        #
+        #; apply multiplicative factor
+        #
+        if (self.get_input_value("multiply") != 1.0):
+            a[:,1] = a[:,1]  * float(get_value("multiply"))
+
+        #
+        # select columns with abscissas and ordinates
+        #
+        col_abscissas = int( self.get_input_value("useAbscissasColumn") )
+        col_ordinates = int( self.get_input_value("useOrdinatesColumn") )
+
+
+        col_ordinates_title = 'unknown'
+        if int(self.get_input_value("useHeightsOrSlopes")) == -1:  #default, read from file
+            if self.h['FILE_FORMAT'] == 1:  # slopes in Col2
+                col_ordinates_title = 'slopes'
+            if self.h['FILE_FORMAT'] == 2:  # heights in Col2
+                col_ordinates_title = 'heights'
+            if self.h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
+                col_ordinates_title = 'slopes'
+        else:
+            if int(self.get_input_value("useHeightsOrSlopes")) == 0:
+                col_ordinates_title = 'heights'
+            if int(self.get_input_value("useHeightsOrSlopes")) == 1:
+                col_ordinates_title = 'slopes'
+
+        if self.inputs["verbose"]:
+            print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
+            print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
+
+
+        #;
+        #; Detrending:
+        #; substract linear fit to the slopes (remove best circle from profile)
+        #;
+        if col_ordinates_title == 'slopes':
+            sy = a[:,col_abscissas]
+            sz1 = a[:,col_ordinates]
+        elif col_ordinates_title == 'heights':
+            sy = a[:,col_abscissas]
+            #TODO we suppose that data are equally spaced. Think how to generalise
+            sz1 = numpy.gradient(a[:,col_ordinates],(sy[1]-sy[0]))
+        else:
+            raise NotImplementedError
+
+        sz = numpy.copy(sz1)
+
+        # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
+        if int(self.get_input_value("setDetrending")) == -2: # this is the default
+            if (self.h['SURFACE_SHAPE']).lower() == "elliptical":
+                polDegree = -3     # elliptical detrending
+            else:
+                polDegree = 1      # linear detrending
+        else:
+            polDegree = int(self.get_input_value("setDetrending"))
+
+
+        if polDegree >= 0: # polinomial fit
+            coeffs = numpy.polyfit(sy, sz1, polDegree)
+            pol = numpy.poly1d(coeffs)
+            zfit = pol(sy)
+            sz = sz1 - zfit
+
+        if polDegree == -3: # ellipse
+            try:
+                from scipy.optimize import curve_fit
+            except:
+                raise ImportError("Cannot perform ellipse detrending: please install scipy")
+
+            popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz1, maxfev=10000)
+            zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
+            sz = sz1 - zfit
+
+
+        #;
+        #; calculate heights by integrating the slope
+        #;
+        zprof = cdf(sy,sz)
+        zprof1 = cdf(sy,sz1)
+
+        self.sy = sy
+        self.sz1 = sz1
+        self.sz = sz
+        self.zprof1 = zprof1
+        self.zprof = zprof
+        self.coeffs = coeffs
+
+
+    def _calc_psd(self):
+        sy    = self.sy
+        sz1    = self.sz1
+        sz    = self.sz
+        zprof1    = self.zprof1
+        zprof     = self.zprof
+
+
+        #;
+        #; calculate PSD on both profile and slope, and also then their cdf()
+        #;
+        psdHeights,f = psd(sy,zprof,onlyrange=None)
+        psdSlopes,f = psd(sy,sz,onlyrange=None)
+        cdfHeights = numpy.sqrt(cdf(f,psdHeights))
+        cdfHeightsRMS = cdfHeights.max()
+        cdfHeights = 1.0 - cdfHeights/cdfHeightsRMS
+        cdfSlopes = numpy.sqrt(cdf(f,psdSlopes))
+        cdfSlopesRMS = cdfSlopes.max()
+        cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
+
+
+        self.f = f
+        self.psdHeights = psdHeights
+        self.psdSlopes = psdSlopes
+        self.cdfHeights = cdfHeights
+        self.cdfSlopes = cdfSlopes
+        return None
+
+
+    def _latex_line(self):
+        """
+        to create a line with profile data latex-formatted for automatic compilation of tables in the paper
+        :return:
+        """
+        return  ('%d & %d & %.2f (%.2f) & %.2f & %.2f (%.2f) & %.2f \\\\'%(self.get_input_value("entryNumber"),
+        int(1e3*(self.sy[-1]-self.sy[0])),
+        1e6*self.sz.std(),   float(-1 if self.h['CALC_SLOPE_RMS'] is None else self.h['CALC_SLOPE_RMS'])  , 1e6*self.stdev_psd_slopes(),
+        1e9*self.zprof.std(),float(-1 if self.h['CALC_HEIGHT_RMS'] is None else self.h['CALC_HEIGHT_RMS']), 1e9*self.stdev_psd_heights(), ))
+
+
+
 
 
 #
@@ -236,9 +1067,9 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
             fs.write(' ' + repr(xx[i]) + " " + tmps )
             fs.write("\n")
         fs.close()
-        print ("File for SHADOW "+outFile+" written to disk.")
+        print ("File "+outFile+" written to disk (for SHADOW).")
 
-def get_arguments():
+def get_arguments_from_command_line_old():
     import argparse # to manage input parameters from command-line argument
 
     #
@@ -289,12 +1120,14 @@ def get_arguments():
     parser.add_argument('-O', '--useOrdinatesColumn', default=1,
         help='using ordinates column index. Default=1')
 
-    parser.add_argument('-P', '--plot', default="",
+    parser.add_argument('-P', '--plot', default=None,
         help='plot: heights slopes psd_h psd_s cdf_h cdf_s')
 
     args = parser.parse_args()
 
     return args
+
+
 
 def get_metadata_and_data(args):
     from io import StringIO
@@ -385,357 +1218,361 @@ def get_metadata_and_data(args):
 
     return h,a,inFileTxt,inFileDat,myServer
 
+
+#
+#
+#
 def main():
-    import json # for decoding metadata
-
-    #
-    # get arguments of dabam call
-    #
-    args = get_arguments()
-
-    if (args.localFileRoot == None):
-        if args.entryNumber == 0:
-            raise Exception("Usage: python dabam.py <entry_number>")
-
-    #
-    #  list arguments
-    #
-
-    argsdict = vars(args)
-    if (args.verbose == True):
-        print ("-----------------------------------------------------")
-        for i,j in argsdict.items():
-            print ("%s = %s" % (i,j))
-        print ("-----------------------------------------------------")
 
 
-    dm = dabam(argsdict)
-
-    # dm.info()
-
-    #
-    #retrieve data and metadata
-    #
-    h,a,inFileTxt,inFileDat,myServer = get_metadata_and_data(args)
-
-    #;
-    #; convert to SI units (m,rad)
-    #;
-    a[:,0] = a[:,0]*h['X1_FACTOR']
-    a[:,1] = a[:,1]*h['Y1_FACTOR']
-    ncols = a.shape[1]
-
-    if int(h["FILE_FORMAT"]) <= 2:
-        for i in range(2,ncols):    # X1 Y1 Y2 Y3...
-            a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
-    elif int(h["FILE_FORMAT"]) == 3: #X1 Y1 X2 Y2 etc
-        ngroups = int(ncols / 2)
-        icol = 1
-        for i in range(2,ngroups):    # X1 Y1 Y2 Y3...
-            icol += 1
-            a[:,icol] = a[:,icol]*h['X%d_FACTOR'%i]
-            icol += 1
-            a[:,icol] = a[:,icol]*h['Y%d_FACTOR'%i]
-
-    #
-    #; apply multiplicative factor
-    #
-    if (args.multiply != 1.0):
-        a[:,1] = a[:,1]  * float(args.multiply)
-
-    #
-    # select columns with abscissas and ordinates
-    #
-    col_abscissas = int(args.useAbscissasColumn)
-    col_ordinates = int(args.useOrdinatesColumn)
+    f_old = 0
 
 
-    col_ordinates_title = 'unknown'
-    if int(args.useHeightsOrSlopes) == -1:  #default, read from file
-        if h['FILE_FORMAT'] == 1:  # slopes in Col2
-            col_ordinates_title = 'slopes'
-        if h['FILE_FORMAT'] == 2:  # heights in Col2
-            col_ordinates_title = 'heights'
-        if h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
-            col_ordinates_title = 'slopes'
-    else:
-        if int(args.useHeightsOrSlopes) == 0:
-            col_ordinates_title = 'heights'
-        if int(args.useHeightsOrSlopes) == 1:
-            col_ordinates_title = 'slopes'
+    if f_old == 0: # NEW
 
-    print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
-    print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
+        dm = dabam()
+
+        # get arguments of dabam command line
+        dm.set_from_command_line()
 
 
-    #;
-    #; Detrending:
-    #; substract linear fit to the slopes (remove best circle from profile)
-    #;
-    if col_ordinates_title == 'slopes':
-        sy = a[:,col_abscissas]
-        sz = a[:,col_ordinates]
-    elif col_ordinates_title == 'heights':
-        sy = a[:,col_abscissas]
-        #TODO we suppose that data are equally spaced. Think how to generalise
-        sz = numpy.gradient(a[:,col_ordinates],(sy[1]-sy[0]))
-    else:
-        raise NotImplementedError
+        # access data
+        dm.load()
 
-    sz1 = numpy.copy(sz)
-    polDegree = int(args.setDetrending)
+        dm.info_profiles()
 
-    # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
-    if polDegree == -2: # this is the default
-        if (h['SURFACE_SHAPE']).lower() == "elliptical":
-            polDegree = -3     # elliptical detrending
+        if dm.get_input_value("plot") != None:
+            dm.plot()
+
+    else: # OLD
+
+        #
+        #  list arguments
+        #
+        args = get_arguments_from_command_line_old()
+        argsdict = vars(args)
+
+        #
+        #retrieve data and metadata
+        #
+        h,a,inFileTxt,inFileDat,myServer = get_metadata_and_data(args)
+
+
+        #;
+        #; convert to SI units (m,rad)
+        #;
+        a[:,0] = a[:,0]*h['X1_FACTOR']
+        a[:,1] = a[:,1]*h['Y1_FACTOR']
+        ncols = a.shape[1]
+
+        if int(h["FILE_FORMAT"]) <= 2:
+            for i in range(2,ncols):    # X1 Y1 Y2 Y3...
+                a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
+        elif int(h["FILE_FORMAT"]) == 3: #X1 Y1 X2 Y2 etc
+            ngroups = int(ncols / 2)
+            icol = 1
+            for i in range(2,ngroups):    # X1 Y1 Y2 Y3...
+                icol += 1
+                a[:,icol] = a[:,icol]*h['X%d_FACTOR'%i]
+                icol += 1
+                a[:,icol] = a[:,icol]*h['Y%d_FACTOR'%i]
+
+        #
+        #; apply multiplicative factor
+        #
+        if (args.multiply != 1.0):
+            a[:,1] = a[:,1]  * float(args.multiply)
+
+        #
+        # select columns with abscissas and ordinates
+        #
+        col_abscissas = int(args.useAbscissasColumn)
+        col_ordinates = int(args.useOrdinatesColumn)
+
+
+        col_ordinates_title = 'unknown'
+        if int(args.useHeightsOrSlopes) == -1:  #default, read from file
+            if h['FILE_FORMAT'] == 1:  # slopes in Col2
+                col_ordinates_title = 'slopes'
+            if h['FILE_FORMAT'] == 2:  # heights in Col2
+                col_ordinates_title = 'heights'
+            if h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
+                col_ordinates_title = 'slopes'
         else:
-            polDegree = 1      # linear detrending
+            if int(args.useHeightsOrSlopes) == 0:
+                col_ordinates_title = 'heights'
+            if int(args.useHeightsOrSlopes) == 1:
+                col_ordinates_title = 'slopes'
+
+        print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
+        print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
 
 
-    if polDegree >= 0: # polinomial fit
-        coeffs = numpy.polyfit(sy, sz, polDegree)
-        pol = numpy.poly1d(coeffs)
-        zfit = pol(sy)
-        sz = sz - zfit
+        #;
+        #; Detrending:
+        #; substract linear fit to the slopes (remove best circle from profile)
+        #;
+        if col_ordinates_title == 'slopes':
+            sy = a[:,col_abscissas]
+            sz = a[:,col_ordinates]
+        elif col_ordinates_title == 'heights':
+            sy = a[:,col_abscissas]
+            #TODO we suppose that data are equally spaced. Think how to generalise
+            sz = numpy.gradient(a[:,col_ordinates],(sy[1]-sy[0]))
+        else:
+            raise NotImplementedError
 
-    if polDegree == -3: # ellipse
-        try:
-            from scipy.optimize import curve_fit
-        except:
-            raise ImportError("Cannot perform ellipse detrending: please install scipy")
+        sz1 = numpy.copy(sz)
+        polDegree = int(args.setDetrending)
 
-        popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz, maxfev=10000)
-        zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
-        sz = sz - zfit
-
-    
-    
-    #;
-    #; histogram (optional) (for fun, not needed)
-    #;
-    
-    if (args.histoCalc == True):
-        binsize = args.histoB # default is 1e-7 rads
-        bins = numpy.ceil( (sz.max()-sz.min())/binsize )
-        hz,hy = numpy.histogram(sz, bins = bins)
-        
-        #calculate positions of the center of the bins
-        hyc = hy+0.5*(hy[1]-hy[0])
-        hyc = hyc[0:-1]
-        
-        #Gaussian
-        g = numpy.exp( -numpy.power(hyc-sz.mean(),2)/2/numpy.power(sz.std(),2) )
-        g = g/g.sum()*hz.sum()
-        
-        # dump histogram to file (3 cols: center of bin, counts, Gaussian value)
-        dd=numpy.concatenate( (hyc, hz, g ) ,axis=0).reshape(3,-1).transpose()
-        outFile = args.rootFile+'Histo.dat'
-        numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk. Cols: slope[rad], counts.")
-    
-    #;
-    #; calculate heights by integrating the slope
-    #;
-    zprof = cdf(sy,sz)
-    zprof1 = cdf(sy,sz1)
-
-    #
-    # Dump heights and slopes profiles to files
-    #
-    if args.rootFile != "":
-        outFile = args.rootFile+'Heights.dat'
-        dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
-        numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
-
-        outFile = args.rootFile+'Slopes.dat'
-        dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
-        numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
-    
-    #;
-    #; calculate PSD on both profile and slope, and also then their cdf()
-    #;
-    psdHeights,f = psd(sy,zprof,onlyrange=None)
-    psdSlopes,f = psd(sy,sz,onlyrange=None)
-    cdfHeights = numpy.sqrt(cdf(f,psdHeights))
-    cdfHeightsRMS = cdfHeights.max()
-    cdfHeights = 1.0-cdfHeights/cdfHeightsRMS
-    cdfSlopes = numpy.sqrt(cdf(f,psdSlopes)) 
-    cdfSlopesRMS = cdfSlopes.max() 
-    cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
-
-    if args.rootFile != "":
-        dd = numpy.concatenate( (f, psdHeights, psdSlopes, cdfHeights, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
-        outFile = args.rootFile+'PSD.dat'
-        numpy.savetxt(outFile,dd)
-        print ("File "+outFile+" written to disk:  Columns are:\n"+
-               "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
-               "              cdf(psd_prof),cdf(psd_slope).")
-    
-    
-    #;
-    #;  write file for SHADOW (optional)
-    #;  replicate the (x,z) profile in a "s" mesh of npointsx * npointsy
-    #; 
-    
-    if (args.shadowCalc == True):
-        #inputs
-        npointsy = int(args.shadowNy)
-        npointsx = int(args.shadowNx)
-        mirror_width = args.shadowWidth # in cm
-        
-        # units to cm
-        y = sy * 100.0 # from m to cm
-        z = zprof * 100.0 # from m to cm
-        
-        # set origin at the center of the mirror. TODO: allow any point for origin
-        z = z - z.min()
-        y = y - y[int(y.size/2)]
+        # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
+        if polDegree == -2: # this is the default
+            if (h['SURFACE_SHAPE']).lower() == "elliptical":
+                polDegree = -3     # elliptical detrending
+            else:
+                polDegree = 1      # linear detrending
 
 
-        # interpolate the profile (y,z) to have npointsy points (new profile yy,zz)
-        mirror_length = y.max() - y.min()
-        yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
-        zz = numpy.interp(yy,y,z)
+        if polDegree >= 0: # polinomial fit
+            coeffs = numpy.polyfit(sy, sz, polDegree)
+            pol = numpy.poly1d(coeffs)
+            zfit = pol(sy)
+            sz = sz - zfit
 
-        # dump to file interpolated profile (for fun)
-        dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
-        outFile = args.rootFile + "ProfileInterpolated.dat"
-        numpy.savetxt(outFile,dd)
-        
-        # fill the mesh arrays xx,yy,s with interpolated profile yy,zz
-        xx=numpy.linspace(-mirror_width/2.0,mirror_width/2.0,npointsx)
-        s = numpy.zeros( (npointsy,npointsx) )
-        for i in range(npointsx):
-            s[:,i]=zz
-        
-        # write Shadow file
-        outFile = args.rootFile + "Shadow.dat"
-        tmp = write_shadowSurface(s,xx,yy,outFile=outFile)
-        
-        # write header file
-        outFile = args.rootFile + "Header.txt"
-        with open(outFile, mode='w') as f1:
-            json.dump(h, f1, indent=2)
-        print ("File "+outFile+" containing metadata written to disk.")
+        if polDegree == -3: # ellipse
+            try:
+                from scipy.optimize import curve_fit
+            except:
+                raise ImportError("Cannot perform ellipse detrending: please install scipy")
 
-    
+            popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz, maxfev=10000)
+            zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
+            sz = sz - zfit
+
+        #;
+        #; histogram (optional) (for fun, not needed)
+        #;
+
+        if (args.histoCalc == True):
+            binsize = args.histoB # default is 1e-7 rads
+            bins = numpy.ceil( (sz.max()-sz.min())/binsize )
+            hz,hy = numpy.histogram(sz, bins = bins)
+
+            #calculate positions of the center of the bins
+            hyc = hy+0.5*(hy[1]-hy[0])
+            hyc = hyc[0:-1]
+
+            #Gaussian
+            g = numpy.exp( -numpy.power(hyc-sz.mean(),2)/2/numpy.power(sz.std(),2) )
+            g = g/g.sum()*hz.sum()
+
+            # dump histogram to file (3 cols: center of bin, counts, Gaussian value)
+            dd=numpy.concatenate( (hyc, hz, g ) ,axis=0).reshape(3,-1).transpose()
+            outFile = args.rootFile+'Histo.dat'
+            numpy.savetxt(outFile,dd)
+            print ("File "+outFile+" written to disk. Cols: slope[rad], counts.")
+
+        #;
+        #; calculate heights by integrating the slope
+        #;
+        zprof = cdf(sy,sz)
+        zprof1 = cdf(sy,sz1)
+
+        #
+        # Dump heights and slopes profiles to files
+        #
+        if args.rootFile != "":
+            outFile = args.rootFile+'Heights.dat'
+            dd=numpy.concatenate( (sy.reshape(-1,1), zprof.reshape(-1,1)),axis=1)
+            numpy.savetxt(outFile,dd)
+            print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
+
+            outFile = args.rootFile+'Slopes.dat'
+            dd=numpy.concatenate( (sy.reshape(-1,1), sz.reshape(-1,1)),axis=1)
+            numpy.savetxt(outFile,dd)
+            print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
+
+        #;
+        #; calculate PSD on both profile and slope, and also then their cdf()
+        #;
+        psdHeights,f = psd(sy,zprof,onlyrange=None)
+        psdSlopes,f = psd(sy,sz,onlyrange=None)
+        cdfHeights = numpy.sqrt(cdf(f,psdHeights))
+        cdfHeightsRMS = cdfHeights.max()
+        cdfHeights = 1.0-cdfHeights/cdfHeightsRMS
+        cdfSlopes = numpy.sqrt(cdf(f,psdSlopes))
+        cdfSlopesRMS = cdfSlopes.max()
+        cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
+
+        if args.rootFile != "":
+            dd = numpy.concatenate( (f, psdHeights, psdSlopes, cdfHeights, cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
+            outFile = args.rootFile+'PSD.dat'
+            numpy.savetxt(outFile,dd)
+            print ("File "+outFile+" written to disk:  Columns are:\n"+
+                   "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
+                   "              cdf(psd_prof),cdf(psd_slope).")
+        #;
+        #; info
+        #;
+        #
+        print ('\n---------- profile results --------------------')
+        if (args.localFileRoot == None):
+            print ('Remote directory:\n   %s'%myServer)
+        print ('Data File:     %s'%inFileDat)
+        print ('Metadata File: %s'%inFileTxt)
+        print ('Surface shape: %s '%(h['SURFACE_SHAPE']))
+        print ('Facility:      %s'%(h['FACILITY']))
+        print ('Scan length: %.3f mm'%(1e3*(sy[-1]-sy[0])))
+        print ('Number of points: %d'%(len(sy)))
+
+        print ('   ')
+
+        if polDegree >= 0:
+            if polDegree == 1:
+                print ("Linear detrending: z'=%g x%+g"%(coeffs[0],coeffs[1]))
+                print ('Radius of curvature: %.3F m'%(1.0/coeffs[-2]))
+            else:
+                print ('Polynomial detrending coefficients: '+repr(coeffs))
+        elif polDegree == -1:
+           print ('No detrending applied.')
+        elif polDegree == -3:
+           print ('Ellipse detrending applied.')
+
+
+        print ('   ')
+        print ('   ')
+        print ('Slope error s_RMS:             %.3f urad'%(1e6*sz.std()))
+        print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
+        print ('         from USER (metadata): %s urad'%(h['CALC_SLOPE_RMS']))
+        print ('Shape error h_RMS:              %.3f nm'%(1e9*zprof.std()))
+        print ('         from PSD:              %.3f nm'%(1e9*cdfHeightsRMS))
+        print ('         from USER (metadata):  %s nm'%(h['CALC_HEIGHT_RMS']))
+        print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(zprof1.max()-zprof1.min() )))
+        print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(zprof.max()-zprof.min() )))
+        print ('   ')
+        # if (args.calcBoundaries == True):
+        #     print ('Diffraction/reflection boundary zones: ')
+        #     print ('   diffraction if h < h_cut, reflection if h > h_cut: ')
+        #     print ('   at wavelength [A]: ')+repr(wavelength*1e10)
+        #     print ('   at grazing angle [mrad]: ')+repr(theta*1e3)
+        #     print ('   ')
+        #     print ('   height cut h_cut [nm]: '+repr(  h_cut*1e9 ))
+        #     print ('   h_cut/h_RMS: '+repr(  h_cut_normalized ))
+        #     print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
+        #     print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
+
+        print ('%d & %d & %.2f (%.2f) & %.2f & %.2f (%.2f) & %.2f \\\\'%(args.entryNumber,
+                int(1e3*(sy[-1]-sy[0])),
+                1e6*sz.std(),   float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS'])  , 1e6*cdfSlopesRMS,
+                1e9*zprof.std(),float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), 1e9*cdfHeightsRMS, ))
+        print ('-------------------------------------------------\n')
+        print (' ')
+
+        #;
+        #;  write file for SHADOW (optional)
+        #;  replicate the (x,z) profile in a "s" mesh of npointsx * npointsy
+        #;
+
+        if (args.shadowCalc == True):
+            #inputs
+            npointsy = int(args.shadowNy)
+            npointsx = int(args.shadowNx)
+            mirror_width = args.shadowWidth # in cm
+
+            # units to cm
+            y = sy * 100.0 # from m to cm
+            z = zprof * 100.0 # from m to cm
+
+            # set origin at the center of the mirror. TODO: allow any point for origin
+            z = z - z.min()
+            y = y - y[int(y.size/2)]
+
+
+            # interpolate the profile (y,z) to have npointsy points (new profile yy,zz)
+            mirror_length = y.max() - y.min()
+            yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
+            zz = numpy.interp(yy,y,z)
+
+            # dump to file interpolated profile (for fun)
+            dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
+            outFile = args.rootFile + "ProfileInterpolated.dat"
+            numpy.savetxt(outFile,dd)
+
+            # fill the mesh arrays xx,yy,s with interpolated profile yy,zz
+            xx=numpy.linspace(-mirror_width/2.0,mirror_width/2.0,npointsx)
+            s = numpy.zeros( (npointsy,npointsx) )
+            for i in range(npointsx):
+                s[:,i]=zz
+
+            # write Shadow file
+            outFile = args.rootFile + "Shadow.dat"
+            tmp = write_shadowSurface(s,xx,yy,outFile=outFile)
+
+            # write header file
+            outFile = args.rootFile + "Header.txt"
+            with open(outFile, mode='w') as f1:
+                json.dump(h, f1, indent=2)
+            print ("File "+outFile+" containing metadata written to disk.")
+
+        if (args.plot != None):
+            try:
+                from matplotlib import pylab as plt
+            except:
+                raise ImportError
+
+            print("plotting: ",args.plot)
+            if (args.plot == "heights" or args.plot == "all"):
+                f1 = plt.figure(1)
+                plt.plot(1e3*sy,1e6*zprof)
+                plt.title("heights profile")
+                plt.xlabel("Y [mm]")
+                plt.ylabel("Z [um]")
+            if (args.plot == "slopes" or args.plot == "all"):
+                f2 = plt.figure(2)
+                plt.plot(1e3*sy,1e6*sz)
+                plt.title("slopes profile" or args.plot == "all")
+                plt.xlabel("Y [mm]")
+                plt.ylabel("Zp [urad]")
+            if (args.plot == "psd_h" or args.plot == "all"):
+                f3 = plt.figure(3)
+                plt.loglog(f,psdHeights)
+                plt.title("PSD of heights profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("PSD [m^3]")
+            if (args.plot == "psd_s" or args.plot == "all"):
+                f4 = plt.figure(4)
+                plt.loglog(f,psdSlopes)
+                plt.title("PSD of slopes profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("PSD [rad^3]")
+            if (args.plot == "cdf_h" or args.plot == "all"):
+                f5 = plt.figure(5)
+                plt.semilogx(f,cdfHeights)
+                plt.title("Lambda CDF(PDF) of heights profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("heights Lambda")
+            if (args.plot == "cdf_s" or args.plot == "all"):
+                f6 = plt.figure(6)
+                plt.semilogx(f,cdfSlopes)
+                plt.title("Lambda CDF(PDF) of slopes profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("slopes Lambda")
+            plt.show()
     #; 
     #; separation between diffuse scattering and specular reflecting domains
     #; TODO: this is experimental, to refine the methodology
     #; 
-    if (args.calcBoundaries == True): 
-        wavelength  = 1.0e-10 # 0.8e-10 # m 
-        theta = 3e-3 # 3.65e-3 # rad
-        h_cut = wavelength/(4*numpy.pi*numpy.sin(theta)) #m 
-        h_cut_normalized = h_cut/zprof.std()
-        # note that numpy.interp requires increasing abscissas
-        inew = cdfHeights.argsort()
-        f_cut = numpy.interp( h_cut_normalized ,cdfHeights[inew],f[inew])
+    # if (args.calcBoundaries == True):
+    #     wavelength  = 1.0e-10 # 0.8e-10 # m
+    #     theta = 3e-3 # 3.65e-3 # rad
+    #     h_cut = wavelength/(4*numpy.pi*numpy.sin(theta)) #m
+    #     h_cut_normalized = h_cut/zprof.std()
+    #     # note that numpy.interp requires increasing abscissas
+    #     inew = cdfHeights.argsort()
+    #     f_cut = numpy.interp( h_cut_normalized ,cdfHeights[inew],f[inew])
 
 
 
-    #; 
-    #; info
-    #; 
-    #
-    print ('\n---------- profile results --------------------')
-    if (args.localFileRoot == None):
-        print ('Remote directory:\n   %s'%myServer)
-    print ('Data File:     %s'%inFileDat)
-    print ('Metadata File: %s'%inFileTxt)
-    print ('Surface shape: %s '%(h['SURFACE_SHAPE']))
-    print ('Facility:      %s'%(h['FACILITY']))
-    print ('Scan length: %.3f mm'%(1e3*(sy[-1]-sy[0])))
-    print ('Number of points: %d'%(len(sy)))
-
-    print ('   ')
-    if polDegree >= 0:
-        if polDegree == 1:
-            print ("Linear detrending: z'=%g x%+g"%(coeffs[0],coeffs[1]))
-            print ('Radius of curvature: %.3F m'%(1.0/coeffs[-2]))
-        else:
-            print ('Polynomial detrending coefficients: '+repr(coeffs))
-    elif polDegree == -1:
-       print ('No detrending applied.')
-    elif polDegree == -3:
-       print ('Ellipse detrending applied.')
-
-    print ('   ')
-    print ('   ')
-    print ('Slope error s_RMS:             %.3f urad'%(1e6*sz.std()))
-    print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
-    print ('         from USER (metadata): %s urad'%(h['CALC_SLOPE_RMS']))
-    print ('Shape error h_RMS:              %.3f nm'%(1e9*zprof.std()))
-    print ('         from PSD:              %.3f nm'%(1e9*cdfHeightsRMS))
-    print ('         from USER (metadata):  %s nm'%(h['CALC_HEIGHT_RMS']))
-    print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(zprof1.max()-zprof1.min() )))
-    print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(zprof.max()-zprof.min() )))
-    print ('   ')
-    if (args.calcBoundaries == True): 
-        print ('Diffraction/reflection boundary zones: ')
-        print ('   diffraction if h < h_cut, reflection if h > h_cut: ')
-        print ('   at wavelength [A]: ')+repr(wavelength*1e10)
-        print ('   at grazing angle [mrad]: ')+repr(theta*1e3)
-        print ('   ')
-        print ('   height cut h_cut [nm]: '+repr(  h_cut*1e9 ))
-        print ('   h_cut/h_RMS: '+repr(  h_cut_normalized )) 
-        print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
-        print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
-
-    print ('%d & %d & %.2f (%.2f) & %.2f & %.2f (%.2f) & %.2f \\\\'%(args.entryNumber,
-            int(1e3*(sy[-1]-sy[0])),
-            1e6*sz.std(),   float(-1 if h['CALC_SLOPE_RMS'] is None else h['CALC_SLOPE_RMS'])  , 1e6*cdfSlopesRMS,
-            1e9*zprof.std(),float(-1 if h['CALC_HEIGHT_RMS'] is None else h['CALC_HEIGHT_RMS']), 1e9*cdfHeightsRMS, ))
-    print ('-------------------------------------------------\n')
-    print (' ')
-
-    if (args.plot != ""):
-        try:
-            from matplotlib import pylab as plt
-        except:
-            raise ImportError
-
-        print("plotting: ",args.plot)
-        if (args.plot == "heights" or args.plot == "all"):
-            f1 = plt.figure(1)
-            plt.plot(1e3*sy,1e6*zprof)
-            plt.title("heights profile")
-            plt.xlabel("Y [mm]")
-            plt.ylabel("Z [um]")
-        if (args.plot == "slopes" or args.plot == "all"):
-            f2 = plt.figure(2)
-            plt.plot(1e3*sy,1e6*sz)
-            plt.title("slopes profile" or args.plot == "all")
-            plt.xlabel("Y [mm]")
-            plt.ylabel("Zp [urad]")
-        if (args.plot == "psd_h" or args.plot == "all"):
-            f3 = plt.figure(3)
-            plt.loglog(f,psdHeights)
-            plt.title("PSD of heights profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("PSD [m^3]")
-        if (args.plot == "psd_s" or args.plot == "all"):
-            f4 = plt.figure(4)
-            plt.loglog(f,psdSlopes)
-            plt.title("PSD of slopes profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("PSD [rad^3]")
-        if (args.plot == "cdf_h" or args.plot == "all"):
-            f5 = plt.figure(5)
-            plt.semilogx(f,cdfHeights)
-            plt.title("Lambda CDF(PDF) of heights profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("heights Lambda")
-        if (args.plot == "cdf_s" or args.plot == "all"):
-            f6 = plt.figure(6)
-            plt.semilogx(f,cdfSlopes)
-            plt.title("Lambda CDF(PDF) of slopes profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("slopes Lambda")
-        plt.show()
 #
 # main program
 #
