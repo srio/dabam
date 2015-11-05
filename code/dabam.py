@@ -50,15 +50,15 @@ except ImportError:
 
 class dabam(object):
     def __init__(self):
-        self.description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/dabam/Readme.md"
+        self.description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/dabam/README.md"
 
         self.server = "http://ftp.esrf.eu/pub/scisoft/dabam/data/"
 
         self.inputs = {
             'entryNumber':1,         # 'an integer indicating the DABAM entry number'
-            'verbose':True, #False,         # 'print some debugging messages. Default is No'
+            'silent':False,          # 'Silent mode. Default is No'
             'localFileRoot':None,    # 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
-            'rootFile':"", # "tmp",        # 'Define the root for output files. Default is "tmp"'
+            'rootFile':"",           # 'Define the root for output files. Default is "", so no output files'
             'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
             'histoCalc':False,       # 'Calculate histograms. Default=No'
             'histoB':1e-7,           # 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
@@ -70,7 +70,8 @@ class dabam(object):
             'useHeightsOrSlopes':-1, # 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
             'useAbscissasColumn':0,  # 'Use abscissas column index. Default=0'
             'useOrdinatesColumn':1,  # 'Use ordinates column index. Default=1'
-            'plot':None,#
+            'plot':None,             # plot data
+            'runTests':False,        # run tests cases
             }
         #to load profiles:
         self.h           = None # metadata
@@ -94,8 +95,8 @@ class dabam(object):
     #variables
     def set_input_entryNumber(self,value):
         self.inputs["entryNumber"] = value
-    def set_input_verbose            (self,value):
-        self.inputs["verbose"] = value
+    def set_input_silent            (self,value):
+        self.inputs["silent"] = value
     def set_input_localFileRoot      (self,value):
         self.inputs["localFileRoot"] = value
     def set_input_rootFile           (self,value):
@@ -124,6 +125,8 @@ class dabam(object):
         self.inputs["useOrdinatesColumn"] = value
     def set_input_plot               (self,value):
         self.inputs["plot"] = value
+    def set_input_runTests           (self,value):
+        self.inputs["runTests"] = value
 
     #others
 
@@ -138,7 +141,7 @@ class dabam(object):
 
         # options
 
-        parser.add_argument('-'+self.get_input_value_short_name('verbose'),'--verbose', action='store_true', help=self.get_input_value_help('verbose'))
+        parser.add_argument('-'+self.get_input_value_short_name('silent'),'--silent', action='store_true', help=self.get_input_value_help('silent'))
 
         parser.add_argument('-'+self.get_input_value_short_name('localFileRoot'), '--localFileRoot', help=self.get_input_value_help('localFileRoot'))
 
@@ -183,11 +186,13 @@ class dabam(object):
         parser.add_argument('-'+self.get_input_value_short_name('plot'), '--plot', default=self.get_input_value('plot'),
             help=self.get_input_value_help('plot'))
 
+        parser.add_argument('-'+self.get_input_value_short_name('runTests'), '--runTests', action='store_true',
+            help=self.get_input_value_help('runTests'))
 
         args = parser.parse_args()
 
         self.set_input_entryNumber(args.entryNumber)
-        self.set_input_verbose(args.verbose)
+        self.set_input_silent(args.silent)
         self.set_input_localFileRoot(args.localFileRoot)
         self.set_input_rootFile(args.rootFile)
         self.set_input_setDetrending(args.setDetrending)
@@ -202,12 +207,13 @@ class dabam(object):
         self.set_input_useAbscissasColumn(args.useAbscissasColumn)
         self.set_input_useOrdinatesColumn(args.useHeightsOrSlopes)
         self.set_input_plot(args.plot)
+        self.set_input_runTests(args.runTests)
 
 
     def set_inputs_from_dictionary(self,dict):
         try:
             self.inputs["entryNumber"]        =  dict["entryNumber"]
-            self.inputs["verbose"]            =  dict["verbose"]
+            self.inputs["silent"]             =  dict["silent"]
             self.inputs["localFileRoot"]      =  dict["localFileRoot"]
             self.inputs["rootFile"]           =  dict["rootFile"]
             self.inputs["setDetrending"]      =  dict["setDetrending"]
@@ -222,18 +228,22 @@ class dabam(object):
             self.inputs["useAbscissasColumn"] =  dict["useAbscissasColumn"]
             self.inputs["useOrdinatesColumn"] =  dict["useOrdinatesColumn"]
             self.inputs["plot"]               =  dict["plot"]
+            self.inputs["runTests"]           =  dict["runTests"]
         except:
             raise Exception("Failed setting dabam input parameters from dictionary")
 
     #
     # tools
     #
-    def remote_access(self):
+    def is_remote_access(self):
         if (self.get_input_value("localFileRoot") == None):
             remoteAccess = 1  # 0=Local file, 1=Remote file
         else:
             remoteAccess = 0  # 0=Local file, 1=Remote file
         return remoteAccess
+
+    def set_remote_access(self):
+        self.set_input_localFileRoot(None)
 
     #
     #getters
@@ -250,11 +260,11 @@ class dabam(object):
 
     def get_input_value_help(self,key):
 
-        if key == 'entryNumber':        return 'an integer indicating the DABAM entry number'
-        if key == 'verbose':            return 'print some debugging messages. Default is No'
-        if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
-        if key == 'rootFile':           return 'Define the root for output files. Default is "tmp"'
-        if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
+        if key == 'entryNumber':        return 'an integer indicating the DABAM entry number or the remote profile files'
+        if key == 'silent':             return 'avoid printing information messages.'
+        if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). If unset, use remore access'
+        if key == 'rootFile':           return 'Define the root for output files. Set to "" for no output.  Default is "'+self.get_input_value("rootFile")+'"'
+        if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=%d'%self.get_input_value("setDetrending")
         if key == 'histoCalc':          return 'Calculate histograms. Default=No'
         if key == 'histoB':             return 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
         if key == 'shadowCalc':         return 'Write file with mesh for SHADOW. Default=No'
@@ -266,6 +276,7 @@ class dabam(object):
         if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=0'
         if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=1'
         if key == 'plot':               return 'Plot what? heights slopes psd_h psd_s cdf_h cdf_s. Default=None'
+        if key == 'runTests':           return 'Run test cases'
 
         return ''
 
@@ -273,21 +284,22 @@ class dabam(object):
     def get_input_value_short_name(self,key):
 
         if key == 'entryNumber':         return 'N'
-        if key == 'verbose':             return 'v'
+        if key == 'silent':              return 's'
         if key == 'localFileRoot':       return 'l'
         if key == 'rootFile':            return 'r'
         if key == 'setDetrending':       return 'D'
         if key == 'histoCalc':           return 'H'
         if key == 'histoB':              return 'b'
-        if key == 'shadowCalc':          return 's'
+        if key == 'shadowCalc':          return 'S'
         if key == 'shadowNy':            return 'y'
         if key == 'shadowNx':            return 'x'
         if key == 'shadowWidth':         return 'w'
         if key == 'multiply':            return 'm'
-        if key == 'useHeightsOrSlopes':  return 'S'
+        if key == 'useHeightsOrSlopes':  return 'Z'
         if key == 'useAbscissasColumn':  return 'A'
         if key == 'useOrdinatesColumn':  return 'O'
         if key == 'plot':                return 'P'
+        if key == 'runTests':            return 'T'
 
         return '?'
 
@@ -337,7 +349,7 @@ class dabam(object):
             outFile = self.get_input_value("rootFile") + "Header.txt"
             with open(outFile, mode='w') as f1:
                 json.dump(self.h, f1, indent=2)
-            if self.inputs["verbose"]:
+            if not(self.inputs["silent"]):
                 print ("File "+outFile+" containing metadata written to disk.")
 
         #
@@ -347,13 +359,13 @@ class dabam(object):
             outFile = self.inputs["rootFile"]+'Heights.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.zprof.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd)
-            if self.inputs["verbose"]:
+            if not(self.inputs["silent"]):
                 print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
 
             outFile = self.inputs["rootFile"]+'Slopes.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.sz.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd)
-            if self.inputs["verbose"]:
+            if not(self.inputs["silent"]):
                 print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
 
 
@@ -362,7 +374,7 @@ class dabam(object):
             dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, self.cdfHeights, self.cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
             outFile = self.get_input_value("rootFile")+'PSD.dat'
             numpy.savetxt(outFile,dd)
-            if self.inputs["verbose"]:
+            if not(self.inputs["silent"]):
                 print ("File "+outFile+" written to disk:  Columns are:\n"+
                    "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
                    "              cdf(psd_prof),cdf(psd_slope).")
@@ -381,8 +393,8 @@ class dabam(object):
         if self.get_input_value("shadowCalc"):
             self.write_file_for_shadow()
 
-        if self.inputs["verbose"]:
-            self.info_profiles()
+        if not(self.inputs["silent"]):
+            print(self.info_profiles())
 
 
     #
@@ -500,10 +512,8 @@ class dabam(object):
 
 
     def info_profiles(self):
-        # h = self._load_file_metadata()
-        # sy,sz1,sz,zprof1,zprof = self._load_profiles()
 
-
+        txt = ""
 
         if int(self.get_input_value("setDetrending")) == -2: # this is the default
             if (self.h['SURFACE_SHAPE']).lower() == "elliptical":
@@ -511,54 +521,38 @@ class dabam(object):
             else:
                 polDegree = 1      # linear detrending
         else:
-            polDegree = int(self.get_input_value("setDetrending"))
+            polDegree = int(self.get_input_value("setDetrending\n"))
+
 
 
         #;
         #; info
         #;
         #
-        print ('\n---------- profile results --------------------')
+        txt += '\n---------- profile results --------------------\n'
         if (self.get_input_value("localFileRoot") == None):
-            print ('Remote directory:\n   %s'%self.server)
-        print ('Data File:     %s'%self.file_data())
-        print ('Metadata File: %s'%self.file_metadata())
-        print ('Surface shape: %s '%(self.h['SURFACE_SHAPE']))
-        print ('Facility:      %s'%(self.h['FACILITY']))
-        print ('Scan length: %.3f mm'%(1e3*(self.sy[-1]-self.sy[0])))
-        print ('Number of points: %d'%(len(self.sy)))
+            txt += 'Remote directory:\n   %s\n'%self.server
+        txt += 'Data File:     %s\n'%self.file_data()
+        txt += 'Metadata File: %s\n'%self.file_metadata()
+        txt += 'Surface shape: %s\n'%(self.h['SURFACE_SHAPE'])
+        txt += 'Facility:      %s\n'%(self.h['FACILITY'])
+        txt += 'Scan length: %.3f mm\n'%(1e3*(self.sy[-1]-self.sy[0]))
+        txt += 'Number of points: %d\n'%(len(self.sy))
 
-        print ('   ')
+        txt += '   '
 
         if polDegree >= 0:
             if polDegree == 1:
-                print ("Linear detrending: z'=%g x%+g"%(self.coeffs[0],self.coeffs[1]))
-                print ('Radius of curvature: %.3F m'%(1.0/self.coeffs[-2]))
+                txt += "Linear detrending: z'=%g x%+g"%(self.coeffs[0],self.coeffs[1])+"\n"
+                txt += 'Radius of curvature: %.3F m'%(1.0/self.coeffs[-2])+"\n"
             else:
-                print ('Polynomial detrending coefficients: '+repr(self.coeffs))
+                txt += 'Polynomial detrending coefficients: '+repr(self.coeffs)+"\n"
         elif polDegree == -1:
-           print ('No detrending applied.')
+           txt += 'No detrending applied.\n'
         elif polDegree == -3:
-           print ('Ellipse detrending applied.')
+           txt += 'Ellipse detrending applied.\n'
 
-
-        cdfHeightsRMS = (numpy.sqrt(cdf(self.f,self.psdHeights))).max()
-        cdfSlopesRMS = (numpy.sqrt(cdf(self.f,self.psdSlopes))).max()
-
-        # print ('   ')
-        # print ('   ')
-        # print ('Slope error s_RMS:             %.3f urad'%(1e6*self.sz.std()))
-        # print ('         from PSD:             %.3f urad'%(1e6*cdfSlopesRMS))
-        # print ('         from USER (metadata): %s urad'%(self.h['CALC_SLOPE_RMS']))
-        # print ('Shape error h_RMS:              %.3f nm'%(1e9*self.zprof.std()))
-        # print ('         from PSD:              %.3f nm'%(1e9*cdfHeightsRMS))
-        # print ('         from USER (metadata):  %s nm'%(self.h['CALC_HEIGHT_RMS']))
-        # print ('PV of height profile (before detrend): %.3f nm'%(  1e9*(self.zprof1.max() - self.zprof1.min() )))
-        # print ('PV of height profile (after detrend):  %.3f nm'%(  1e9*(self.zprof.max() - self.zprof.min() )))
-        # print ('   ')
-
-
-        print (self.stdev_summary())
+        txt += self.stdev_summary()
 
 
         # if (args.calcBoundaries == True):
@@ -573,9 +567,11 @@ class dabam(object):
         #     print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
 
         #todo: remove
-        print (self._latex_line())
-        print ('-------------------------------------------------\n')
-        print (' ')
+        txt += "\n" + self._latex_line() + "\n"
+        txt += '-------------------------------------------------\n'
+        txt += ' '
+
+        return txt
 
 
     def plot(self):
@@ -584,45 +580,55 @@ class dabam(object):
         except:
             raise ImportError
 
-        what = self.get_input_value("plot")
+        what = self.get_input_value("plot")\
 
-        print("plotting: ",what)
-        if (what == "heights" or what == "all"):
-            f1 = plt.figure(1)
-            plt.plot(1e3*self.sy,1e6*self.zprof)
-            plt.title("heights profile")
-            plt.xlabel("Y [mm]")
-            plt.ylabel("Z [um]")
-        if (what == "slopes" or what == "all"):
-            f2 = plt.figure(2)
-            plt.plot(1e3*self.sy,1e6*self.sz)
-            plt.title("slopes profile" or what == "all")
-            plt.xlabel("Y [mm]")
-            plt.ylabel("Zp [urad]")
-        if (what == "psd_h" or what == "all"):
-            f3 = plt.figure(3)
-            plt.loglog(self.f,self.psdHeights)
-            plt.title("PSD of heights profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("PSD [m^3]")
-        if (what == "psd_s" or what == "all"):
-            f4 = plt.figure(4)
-            plt.loglog(self.f,self.psdSlopes)
-            plt.title("PSD of slopes profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("PSD [rad^3]")
-        if (what == "cdf_h" or what == "all"):
-            f5 = plt.figure(5)
-            plt.semilogx(self.f,self.cdfHeights)
-            plt.title("Lambda CDF(PDF) of heights profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("heights Lambda")
-        if (what == "cdf_s" or what == "all"):
-            f6 = plt.figure(6)
-            plt.semilogx(self.f,self.cdfSlopes)
-            plt.title("Lambda CDF(PDF) of slopes profile")
-            plt.xlabel("f [m^-1]")
-            plt.ylabel("slopes Lambda")
+        if what == "all":
+            what = ["heights","slopes","psd_h","psd_s","cdf_h","cdf_s"]
+        else:
+            what = what.split(" ")
+
+        for i,iwhat in enumerate(what):
+
+            print("plotting: ",iwhat)
+            if (iwhat == "heights" ):
+                f1 = plt.figure(1)
+                plt.plot(1e3*self.sy,1e6*self.zprof)
+                plt.title("heights profile")
+                plt.xlabel("Y [mm]")
+                plt.ylabel("Z [um]")
+            elif (iwhat == "slopes"):
+                f2 = plt.figure(2)
+                plt.plot(1e3*self.sy,1e6*self.sz)
+                plt.title("slopes profile")
+                plt.xlabel("Y [mm]")
+                plt.ylabel("Zp [urad]")
+            elif (iwhat == "psd_h"):
+                f3 = plt.figure(3)
+                plt.loglog(self.f,self.psdHeights)
+                plt.title("PSD of heights profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("PSD [m^3]")
+            elif (iwhat == "psd_s"):
+                f4 = plt.figure(4)
+                plt.loglog(self.f,self.psdSlopes)
+                plt.title("PSD of slopes profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("PSD [rad^3]")
+            elif (iwhat == "cdf_h"):
+                f5 = plt.figure(5)
+                plt.semilogx(self.f,self.cdfHeights)
+                plt.title("Lambda CDF(PDF) of heights profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("heights Lambda")
+            elif (iwhat == "cdf_s"):
+                f6 = plt.figure(6)
+                plt.semilogx(self.f,self.cdfSlopes)
+                plt.title("Lambda CDF(PDF) of slopes profile")
+                plt.xlabel("f [m^-1]")
+                plt.ylabel("slopes Lambda")
+            else:
+                print("Plotting options are: heights slopes psd_h psd_s cdf_h cdf_s")
+                return None
         plt.show()
 
 
@@ -631,7 +637,7 @@ class dabam(object):
     #
     def _file_root(self):
 
-        if self.remote_access():
+        if self.is_remote_access():
             input_option = self.get_input_value("entryNumber")
             inFileRoot = 'dabam-'+str(input_option)
         else:
@@ -640,7 +646,7 @@ class dabam(object):
         return inFileRoot
 
     def _load_file_metadata(self):
-        if self.remote_access():
+        if self.is_remote_access():
             # metadata file
             myfileurl = self.server+self.file_metadata()
             u = urlopen(myfileurl)
@@ -658,7 +664,7 @@ class dabam(object):
 
 
     def _load_file_data(self):
-        if self.remote_access():
+        if self.is_remote_access():
             # data
             myfileurl = self.server+self.file_data()
             try:
@@ -706,7 +712,7 @@ class dabam(object):
 
         if int(self.h["FILE_FORMAT"]) <= 2:
             for i in range(2,ncols):    # X1 Y1 Y2 Y3...
-                a[:,i] = a[:,i]*h['Y%d_FACTOR'%i]
+                a[:,i] = a[:,i]*self.h['Y%d_FACTOR'%i]
         elif int(self.h["FILE_FORMAT"]) == 3: #X1 Y1 X2 Y2 etc
             ngroups = int(ncols / 2)
             icol = 1
@@ -743,7 +749,7 @@ class dabam(object):
             if int(self.get_input_value("useHeightsOrSlopes")) == 1:
                 col_ordinates_title = 'slopes'
 
-        if self.inputs["verbose"]:
+        if not(self.inputs["silent"]):
             print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
             print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
 
@@ -765,6 +771,9 @@ class dabam(object):
         sz = numpy.copy(sz1)
 
         # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
+
+
+
         if int(self.get_input_value("setDetrending")) == -2: # this is the default
             if (self.h['SURFACE_SHAPE']).lower() == "elliptical":
                 polDegree = -3     # elliptical detrending
@@ -779,8 +788,11 @@ class dabam(object):
             pol = numpy.poly1d(coeffs)
             zfit = pol(sy)
             sz = sz1 - zfit
+        else:
+            coeffs = None
 
         if polDegree == -3: # ellipse
+            coeffs = None
             try:
                 from scipy.optimize import curve_fit
             except:
@@ -1046,6 +1058,10 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
 # tests
 #
 def test_dabam_names():
+    """
+    Tests that the I/O methods work well for the list of input values
+    :return:
+    """
 
     print("-------------------  test_dabam_names ------------------------------")
     dm = dabam()
@@ -1099,23 +1115,39 @@ def test_dabam_names():
         raise Exception("Back to initial value: error returning to initial state")
 
 def test_dabam_stdev_slopes():
+    """
+    Tests the slope error value for the nmax first profiles (from remote server)
+    :return:
+    """
 
     print("-------------------  test_dabam_slopes ------------------------------")
-    stdev_profile_ok = [4.8651846142e-07,1.50962702525e-07]
-    stdev_psd_ok = [2.47240356159e-08,2.44054273489e-09]
+    stdev_profile_ok = [4.8651846141972904e-07, 1.5096270252538352e-07, 1.7394444580303415e-07, 1.3428739185534941e-07, 8.4197811681221573e-07, 1.0097219914863226e-06, 5.74153915948042e-07, 5.7147678897188605e-07, 4.3527688789008779e-07, 2.3241765005153794e-07]
+    stdev_psd_ok = [2.4724035615909884e-08, 2.4405427348911064e-09, 8.122795547837512e-10, 1.4019943864619925e-10, 1.6826933750035566e-08, 2.0711769898782215e-09, 3.2138903485739521e-10, 2.5457246098948428e-09, 1.9318084893422374e-09, 3.3646805118574403e-09]
 
-    for i in range(2):
+    nmax = 10
+
+    tmp_profile = []
+    tmp_psd = []
+    for i in range(nmax):
         print(">> testing slopes stdev from profile number: ",i )
         dm = dabam()
-        dm.set_input_verbose(False)
+        dm.set_input_silent(True)
         dm.set_input_entryNumber(i+1)
         dm.load()
         stdev_profile = dm.stdev_profile_slopes()
         stdev_psd = dm.stdev_psd_slopes()
-        print("stdev from profile ",stdev_profile,' OK: ',stdev_profile_ok[i])
-        print("stdev from psd ",stdev_psd,' OK: ',stdev_psd_ok[i])
-        assert abs(stdev_profile - stdev_profile_ok[i])<1e-10
-        assert abs(stdev_psd - stdev_psd_ok[i])<1e-11
+        tmp_profile.append(stdev_profile)
+        tmp_psd.append(stdev_psd)
+
+    print("stdev from profile:          ",repr(tmp_profile))
+    print("stdev OK (stored) profile:   ",repr(stdev_profile_ok))
+    print("stdev from psd:              ",repr(tmp_psd))
+    print("stdev OK (stored)psd:        ",repr(stdev_psd_ok))
+
+    for i in range(nmax):
+        assert abs(tmp_profile[i] - stdev_profile_ok[i])<1e-10
+        assert abs(tmp_psd[i] - stdev_psd_ok[i])<1e-11
+
 
 #
 #
@@ -1125,21 +1157,25 @@ def main():
     # initialize
     dm = dabam()
 
+    dm.set_input_rootFile("tmp")
     # get arguments of dabam command line
     dm.set_from_command_line()
 
-    # access data
-    dm.load()
-
-    #dm.info_profiles()
-
-    if dm.get_input_value("plot") != None:
-        dm.plot()
-
-
-    # test_dabam_names()
     #
-    # test_dabam_stdev_slopes()
+    # if runTests selected
+    #
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>",dm.get_input_value("runTests"))
+    if dm.get_input_value("runTests"):
+        test_dabam_names()
+        test_dabam_stdev_slopes()
+    else:
+        # access data
+        dm.load()
+        if dm.get_input_value("plot") != None:
+            dm.plot()
+
+
+
 #
 # main program
 #
