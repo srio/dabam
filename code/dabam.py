@@ -60,13 +60,13 @@ class dabam(object):
             'localFileRoot':None,    # 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
             'rootFile':"",           # 'Define the root for output files. Default is "", so no output files'
             'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
-            'histoCalc':False,       # 'Calculate histograms. Default=No'
-            'histoB':1e-7,           # 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
+            'binS':1e-7,             # 'Binsize of the slopes histogram in rads. Default is 1e-7'
+            'binH':1e-10,            # 'Binsize of the heights histogram in m. Default is 1e-10'
             'shadowCalc':False,      # 'Write file with mesh for SHADOW. Default=No'
             'shadowNy':199,          # 'For SHADOW file, the number of points along Y (length). Default=199'
             'shadowNx':11,           # 'For SHADOW file, the number of points along X (width). Default=11'
             'shadowWidth':6.0,       # 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
-            'multiply':1.0,          # 'Multiply input profile (slope or height) by this number (to play with RMS values). Default=1.0'
+            'multiply':1.0,          # 'Multiply input profile (slope or height) by this number (to play with StDev values). Default=1.0'
             'useHeightsOrSlopes':-1, # 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
             'useAbscissasColumn':0,  # 'Use abscissas column index. Default=0'
             'useOrdinatesColumn':1,  # 'Use ordinates column index. Default=1'
@@ -87,6 +87,7 @@ class dabam(object):
         self.psdSlopes   = None # Power Spectral Density of slopes profile
         self.cdfHeights  = None # PDF integral of Heights profile
         self.cdfSlopes   = None # PDF integral of Slopes profile
+        self.histoSlopes = None # to store histogram
 
     #
     #setters
@@ -103,10 +104,10 @@ class dabam(object):
         self.inputs["rootFile"] = value
     def set_input_setDetrending      (self,value):
         self.inputs["setDetrending"] = value
-    def set_input_histoCalc          (self,value):
-        self.inputs["histoCalc"] = value
-    def set_input_histoB             (self,value):
-        self.inputs["histoB"] = value
+    def set_input_binS            (self,value):
+        self.inputs["binS"] = value
+    def set_input_binH            (self,value):
+        self.inputs["binH"] = value
     def set_input_shadowCalc         (self,value):
         self.inputs["shadowCalc"] = value
     def set_input_shadowNy           (self,value):
@@ -151,13 +152,11 @@ class dabam(object):
         parser.add_argument('-'+self.get_input_value_short_name('setDetrending'), '--setDetrending', default=self.get_input_value('setDetrending'),
             help=self.get_input_value_help('setDetrending'))
 
+        parser.add_argument('-'+self.get_input_value_short_name('binS'), '--binS', default=self.get_input_value('binS'),
+            help=self.get_input_value_help('binS'))
 
-        parser.add_argument('-'+self.get_input_value_short_name('histoCalc'), '--histoCalc', action='store_true',
-            help=self.get_input_value_help('histoCalc'))
-
-        parser.add_argument('-'+self.get_input_value_short_name('histoB'), '--histoB', default=self.get_input_value('histoB'),
-            help=self.get_input_value_help('histoB'))
-
+        parser.add_argument('-'+self.get_input_value_short_name('binH'), '--binH', default=self.get_input_value('binH'),
+            help=self.get_input_value_help('binH'))
 
         parser.add_argument('-'+self.get_input_value_short_name('shadowCalc'), '--shadowCalc', action='store_true',
             help=self.get_input_value_help('shadowCalc'))
@@ -172,7 +171,6 @@ class dabam(object):
 
         parser.add_argument('-'+self.get_input_value_short_name('multiply'), '--multiply', default=self.get_input_value('multiply'),
             help=self.get_input_value_help('multiply'))
-
 
         parser.add_argument('-'+self.get_input_value_short_name('useHeightsOrSlopes'), '--useHeightsOrSlopes', default=self.get_input_value('useHeightsOrSlopes'),
             help=self.get_input_value_help('useHeightsOrSlopes'))
@@ -196,8 +194,8 @@ class dabam(object):
         self.set_input_localFileRoot(args.localFileRoot)
         self.set_input_rootFile(args.rootFile)
         self.set_input_setDetrending(args.setDetrending)
-        self.set_input_histoCalc(args.histoCalc)
-        self.set_input_histoB(args.histoB)
+        self.set_input_binS(args.binS)
+        self.set_input_binH(args.binH)
         self.set_input_shadowCalc(args.shadowCalc)
         self.set_input_shadowNy(args.shadowNy)
         self.set_input_shadowNx(args.shadowNx)
@@ -217,8 +215,8 @@ class dabam(object):
             self.inputs["localFileRoot"]      =  dict["localFileRoot"]
             self.inputs["rootFile"]           =  dict["rootFile"]
             self.inputs["setDetrending"]      =  dict["setDetrending"]
-            self.inputs["histoCalc"]          =  dict["histoCalc"]
-            self.inputs["histoB"]             =  dict["histoB"]
+            self.inputs["binS"]               =  dict["binS"]
+            self.inputs["binH"]               =  dict["binH"]
             self.inputs["shadowCalc"]         =  dict["shadowCalc"]
             self.inputs["shadowNy"]           =  dict["shadowNy"]
             self.inputs["shadowNx"]           =  dict["shadowNx"]
@@ -265,19 +263,18 @@ class dabam(object):
         if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). If unset, use remore access'
         if key == 'rootFile':           return 'Define the root for output files. Set to "" for no output.  Default is "'+self.get_input_value("rootFile")+'"'
         if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=%d'%self.get_input_value("setDetrending")
-        if key == 'histoCalc':          return 'Calculate histograms. Default=No'
-        if key == 'histoB':             return 'If histogram is calculated, this is the binsize in rads. Default is 1e-7'
+        if key == 'binS':               return 'Binsize of the slopes histogram in rads. Default is 1e-7'
+        if key == 'binH':               return 'Binsize of the heights histogram in m. Default is 1e-10'
         if key == 'shadowCalc':         return 'Write file with mesh for SHADOW. Default=No'
         if key == 'shadowNy':           return 'For SHADOW file, the number of points along Y (length). Default=199'
         if key == 'shadowNx':           return 'For SHADOW file, the number of points along X (width). Default=11'
         if key == 'shadowWidth':        return 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
-        if key == 'multiply':           return 'Multiply input profile (slope or height) by this number (to play with RMS values). Default=1.0'
+        if key == 'multiply':           return 'Multiply input profile (slope or height) by this number (to play with StDev values). Default=1.0'
         if key == 'useHeightsOrSlopes': return 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
         if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=0'
         if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=1'
-        if key == 'plot':               return 'Plot what? heights slopes psd_h psd_s cdf_h cdf_s. Default=None'
+        if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s cdf_h cdf_s. histo_s histo_h. Default=None'
         if key == 'runTests':           return 'Run test cases'
-
         return ''
 
 
@@ -288,8 +285,8 @@ class dabam(object):
         if key == 'localFileRoot':       return 'l'
         if key == 'rootFile':            return 'r'
         if key == 'setDetrending':       return 'D'
-        if key == 'histoCalc':           return 'H'
-        if key == 'histoB':              return 'b'
+        if key == 'binS':                return 'b'
+        if key == 'binH':                return 'e'
         if key == 'shadowCalc':          return 'S'
         if key == 'shadowNy':            return 'y'
         if key == 'shadowNx':            return 'x'
@@ -358,13 +355,13 @@ class dabam(object):
         if self.get_input_value("rootFile") != "":
             outFile = self.inputs["rootFile"]+'Heights.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.zprof.reshape(-1,1)),axis=1)
-            numpy.savetxt(outFile,dd)
+            numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  heights profile\nN 2\nL  coordinate[m]  height[m]"%(outFile))
             if not(self.inputs["silent"]):
-                print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),height(m).")
+                print ("File "+outFile+" containing heights profile written to disk.")
 
             outFile = self.inputs["rootFile"]+'Slopes.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.sz.reshape(-1,1)),axis=1)
-            numpy.savetxt(outFile,dd)
+            numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  slopes profile\nN 2\nL  coordinate[m]  slopes[rad]"%(outFile))
             if not(self.inputs["silent"]):
                 print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
 
@@ -373,29 +370,49 @@ class dabam(object):
         if self.get_input_value("rootFile") != "":
             dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, self.cdfHeights, self.cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
             outFile = self.get_input_value("rootFile")+'PSD.dat'
-            numpy.savetxt(outFile,dd)
+            header = "F %s\nS 1  power spectral density\nN 5\nL  freq[m^-1]  psd_heights[m^3]  psd_slopes[rad^3]  cdf(psd_h)  cdf(psd_s)"%(outFile)
+            numpy.savetxt(outFile,dd,comments="#",header=header)
             if not(self.inputs["silent"]):
                 print ("File "+outFile+" written to disk:  Columns are:\n"+
                    "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
                    "              cdf(psd_prof),cdf(psd_slope).")
 
         #calculate and write histograms
-        if self.get_input_value("histoCalc"):
-            hyc, hz, hg = self.calc_histograms()
-            # dump histogram to file (3 cols: center of bin, counts, Gaussian value)
-            if self.get_input_value("rootFile") != "":
-                dd=numpy.concatenate( (hyc, hz, hg ) ,axis=0).reshape(3,-1).transpose()
-                outFile = self.get_input_value("rootFile")+'Histo.dat'
-                numpy.savetxt(outFile,dd)
-                print ("File "+outFile+" written to disk. Cols: slope[rad], counts, Gaussian.")
+        self.calc_histograms()
+
+        # write slopes histogram
+        if self.get_input_value("rootFile") != "":
+            dd=numpy.concatenate( (self.histoSlopes["x"],self.histoSlopes["y1"],self.histoSlopes["y2"] ) ,axis=0).reshape(3,-1).transpose()
+            outFile = self.get_input_value("rootFile")+'HistoSlopes.dat'
+            numpy.savetxt(outFile,dd,header="F %s\nS  1  histograms of slopes\nN 3\nL  slope[rad] at bin center  counts  Gaussian with StDev = %g"%
+                                            (outFile,self.stdev_profile_slopes()),comments='#')
+            if not(self.inputs["silent"]):
+                print ("File "+outFile+" written to disk. Cols: slope[rad] at bin center, counts, Gaussian.")
+
+        # heights histogrtam
+        if self.get_input_value("rootFile") != "":
+            dd=numpy.concatenate( (self.histoHeights["x"],self.histoHeights["y1"],self.histoHeights["y2"] ) ,axis=0).reshape(3,-1).transpose()
+            outFile = self.get_input_value("rootFile")+'HistoHeights.dat'
+            numpy.savetxt(outFile,dd,header="F %s\nS  1  histograms of heights\nN 3\nL  heights[m] at bin center  counts  Gaussian with StDev = %g"%
+                                            (outFile,self.stdev_profile_heights()),comments='#')
 
         #shadow file
         if self.get_input_value("shadowCalc"):
             self.write_file_for_shadow()
+            if not(self.inputs["silent"]):
+                outFile = self.get_input_value("rootFile")+'Shadow.dat'
+                print ("File "+outFile+" for SHADOW written to disk.")
 
+
+        #info
         if not(self.inputs["silent"]):
             print(self.info_profiles())
 
+        if self.get_input_value("rootFile") != "":
+            outFile = self.get_input_value("rootFile")+'Info.txt'
+            f = open(outFile,'w')
+            f.write(self.info_profiles())
+            f.close()
 
     #
     #calculations
@@ -422,12 +439,12 @@ class dabam(object):
     def stdev_summary(self):
 
         txt = ""
-        txt += 'Slope error s_RMS:             %.3f urad\n'       %( 1e6*self.stdev_profile_slopes() )
+        txt += 'Slope error s_StDev:           %.3f urad\n'       %( 1e6*self.stdev_profile_slopes() )
         txt += '         from PSD:             %.3f urad\n'       %( 1e6*self.stdev_psd_slopes() )
         txt += '         from USER (metadata): %s urad\n'         %(self.stdev_user_slopes())
-        txt += 'Shape error h_RMS:              %.3f nm\n'        %(1e9*self.stdev_profile_heights() )
-        txt += '         from PSD:              %.3f nm\n'        %(1e9*self.stdev_psd_heights() )
-        txt += '         from USER (metadata):  %s nm\n'          %(self.stdev_user_heights() )
+        txt += 'Shape error h_StDev:           %.3f nm\n'        %(1e9*self.stdev_profile_heights() )
+        txt += '         from PSD:             %.3f nm\n'        %(1e9*self.stdev_psd_heights() )
+        txt += '         from USER (metadata): %s nm\n'          %(self.stdev_user_heights() )
         txt += 'PV of height profile (before detrend): %.3f nm\n' %(1e9*(self.zprof1.max() - self.zprof1.min() ))
         txt += 'PV of height profile (after detrend):  %.3f nm\n' %(1e9*(self.zprof.max() - self.zprof.min() ))
 
@@ -437,39 +454,88 @@ class dabam(object):
 
 
     def calc_histograms(self):
+        """
+        Calculates slopes and heights histograms and also the Gaussians with their StDev
 
-        sy    = self.sy
-        sz1    = self.sz1
-        sz    = self.sz
-        zprof1    = self.zprof1
-        zprof     = self.zprof
-        #;
-        #; histogram
-        #;
-        binsize = self.get_input_value("histoB") # default is 1e-7 rads
-        bins = numpy.ceil( (sz.max()-sz.min())/binsize )
-        hz,hy = numpy.histogram(sz, bins = bins)
+        results are stored in:
+        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
 
-        #calculate positions of the center of the bins
-        hyc = hy+0.5*(hy[1]-hy[0])
-        hyc = hyc[0:-1]
+        where:
+          x is the abscissas (at bin center), y1 is the histogram, y2 is the Gaussian
+          x_path is the abscissas with points at left and riggh edges of each bin, y1_path is the
+        :return:
+        """
 
-        #Gaussian
-        g = numpy.exp( -numpy.power(hyc-sz.mean(),2)/2/numpy.power(sz.std(),2) )
+        #
+        # slopes histogram
+        #
+
+        binsize = float(self.get_input_value("binS")) # default is 1e-7 rads
+        bins = numpy.ceil( (self.sz.max()-self.sz.min())/binsize )
+        hz,hy_left = numpy.histogram(self.sz, bins = bins)
+
+        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
+        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
+
+        hy_path = []
+        hz_path = []
+        for s,t,v in zip(hy_left,hy_right,hz):
+            hy_path.append(s)
+            hz_path.append(v)
+            hy_path.append(t)
+            hz_path.append(v)
+
+        hy_path = numpy.array(hy_path)
+        hz_path = numpy.array(hz_path)
+
+        #Gaussian with StDev of data
+        g = numpy.exp( -numpy.power(hy_center-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
         g = g/g.sum()*hz.sum()
 
+        g_path = numpy.exp( -numpy.power(hy_path-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
+        g_path = g_path/g_path.sum()*hz_path.sum()
 
-        return hyc, hz, g
+        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
 
+        #
+        # heights histogram
+        #
+
+        binsize = float(self.get_input_value("binH"))
+        bins = numpy.ceil( (self.zprof.max()-self.zprof.min())/binsize )
+        hz,hy_left = numpy.histogram(self.zprof, bins = bins)
+
+        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
+        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
+
+        hy_path = []
+        hz_path = []
+        for s,t,v in zip(hy_left,hy_right,hz):
+            hy_path.append(s)
+            hz_path.append(v)
+            hy_path.append(t)
+            hz_path.append(v)
+
+        hy_path = numpy.array(hy_path)
+        hz_path = numpy.array(hz_path)
+
+        #Gaussian with StDev of data
+        g = numpy.exp( -numpy.power(hy_center-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
+        g = g/g.sum()*hz.sum()
+
+        g_path = numpy.exp( -numpy.power(hy_path-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
+        g_path = g_path/g_path.sum()*hz_path.sum()
+
+        self.histoHeights = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
 
     #
     # write things
     #
     def write_file_for_shadow(self):
-        #;
-        #;  write file for SHADOW (optional)
-        #;  replicate the (x,z) profile in a "s" mesh of npointsx * npointsy
-        #;
+        #
+        #  write file for SHADOW (optional)
+        #  replicate the (x,z) profile in a "s" mesh of npointsx * npointsy
+        #
 
         #inputs
         npointsy = int(self.get_input_value("shadowNy"))
@@ -509,8 +575,6 @@ class dabam(object):
     #
     # info
     #
-
-
     def info_profiles(self):
 
         txt = ""
@@ -529,7 +593,7 @@ class dabam(object):
         #; info
         #;
         #
-        txt += '\n---------- profile results --------------------\n'
+        txt += '\n---------- profile results -------------------------\n'
         if (self.get_input_value("localFileRoot") == None):
             txt += 'Remote directory:\n   %s\n'%self.server
         txt += 'Data File:     %s\n'%self.file_data()
@@ -554,7 +618,7 @@ class dabam(object):
 
         txt += self.stdev_summary()
 
-
+        txt += '----------------------------------------------------\n'
         # if (args.calcBoundaries == True):
         #     print ('Diffraction/reflection boundary zones: ')
         #     print ('   diffraction if h < h_cut, reflection if h > h_cut: ')
@@ -566,10 +630,6 @@ class dabam(object):
         #     print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
         #     print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
 
-        #todo: remove
-        txt += "\n" + self._latex_line() + "\n"
-        txt += '-------------------------------------------------\n'
-        txt += ' '
 
         return txt
 
@@ -580,15 +640,14 @@ class dabam(object):
         except:
             raise ImportError
 
-        what = self.get_input_value("plot")\
+        what = self.get_input_value("plot")
 
         if what == "all":
-            what = ["heights","slopes","psd_h","psd_s","cdf_h","cdf_s"]
+            what = ["heights","slopes","psd_h","psd_s","cdf_h","cdf_s","histo_s","histo_h"]
         else:
             what = what.split(" ")
 
         for i,iwhat in enumerate(what):
-
             print("plotting: ",iwhat)
             if (iwhat == "heights" ):
                 f1 = plt.figure(1)
@@ -626,6 +685,20 @@ class dabam(object):
                 plt.title("Lambda CDF(PDF) of slopes profile")
                 plt.xlabel("f [m^-1]")
                 plt.ylabel("slopes Lambda")
+            elif (iwhat == "histo_s" ):
+                f7 = plt.figure(7)
+                plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y1_path"])
+                plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y2_path"])
+                plt.title("slopes histogram")
+                plt.xlabel("Z' [urad]")
+                plt.ylabel("counts")
+            elif (iwhat == "histo_h" ):
+                f8 = plt.figure(8)
+                plt.plot(1e9*self.histoHeights["x_path"],self.histoHeights["y1_path"])
+                plt.plot(1e9*self.histoHeights["x_path"],self.histoHeights["y2_path"])
+                plt.title("heights histogram")
+                plt.xlabel("Z [nm]")
+                plt.ylabel("counts")
             else:
                 print("Plotting options are: heights slopes psd_h psd_s cdf_h cdf_s")
                 return None
@@ -830,11 +903,11 @@ class dabam(object):
         psdHeights,f = psd(sy,zprof,onlyrange=None)
         psdSlopes,f = psd(sy,sz,onlyrange=None)
         cdfHeights = numpy.sqrt(cdf(f,psdHeights))
-        cdfHeightsRMS = cdfHeights.max()
-        cdfHeights = 1.0 - cdfHeights/cdfHeightsRMS
+        cdfHeightsStDev = cdfHeights.max()
+        cdfHeights = 1.0 - cdfHeights/cdfHeightsStDev
         cdfSlopes = numpy.sqrt(cdf(f,psdSlopes))
-        cdfSlopesRMS = cdfSlopes.max()
-        cdfSlopes = 1.0 - cdfSlopes/cdfSlopesRMS
+        cdfSlopesStDev = cdfSlopes.max()
+        cdfSlopes = 1.0 - cdfSlopes/cdfSlopesStDev
 
 
         self.f = f
@@ -858,7 +931,7 @@ class dabam(object):
 
 #
 # main functions
-# 
+#
 
 def cdf(sy, sz, method = 1 ):
     """
@@ -871,10 +944,10 @@ def cdf(sy, sz, method = 1 ):
            method : 0 use simple sum as integration method
                     1 use trapezoidal rule (default)
       RESTRICTIONS:
-          the abscissas step must be sorted, but may not be constant 
-      
+          the abscissas step must be sorted, but may not be constant
+
            1D array with cdf
-     
+
     """
 
     zprof = sz*0.0
@@ -886,9 +959,9 @@ def cdf(sy, sz, method = 1 ):
         steps = sy - steps
         zprof = numpy.cumsum(sz*steps)
     else:
-        for i in range(sz.size): 
+        for i in range(sz.size):
           zprof[i]= numpy.trapz(sz[0:i+1], x = sy[0:i+1])
-    
+
     return zprof
 
 
@@ -908,15 +981,15 @@ def psd(x, y, onlyrange = None):
                1/(length) to 1/(2*interval) (i.e., the Nyquist
                frequency), where length is the length of the scan,
                and interval is the spacing between points.
-     
+
       PROCEDURE
             S=Length*ABS(ifft(Y*Window)^2
             Where Length is as described above, and Window is the value of
-            the optional window function 
-     
+            the optional window function
+
     """
     n_pts = x.size
-    if (n_pts <= 1): 
+    if (n_pts <= 1):
         print ("psd: Error, must have at least 2 points.")
         return 0
 
@@ -925,8 +998,8 @@ def psd(x, y, onlyrange = None):
 
     window=yy*0+1.
     length=xx.max()-xx.min()  # total scan length.
-    # psd 
-    s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2) 
+    # psd
+    s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2)
 
     s=s[1:(n_pts/2+1*numpy.mod(n_pts,2))]  # take an odd number of points.
     n_ps=s.size                       # number of psd points.
@@ -934,10 +1007,10 @@ def psd(x, y, onlyrange = None):
     f_min=1./length                   # minimum spatial frequency.
     f_max=1./(2.*interval)            # maximum (Nyquist) spatial frequency.
     # spatial frequencies.
-    f=numpy.arange(float(n_ps))/(n_ps-1)*(f_max-f_min)+f_min 
+    f=numpy.arange(float(n_ps))/(n_ps-1)*(f_max-f_min)+f_min
 
     if onlyrange != None:
-        roi =  (f <= onlyrange[1]) * (f >= onlyrange[0]) 
+        roi =  (f <= onlyrange[1]) * (f >= onlyrange[0])
         if roi.sum() > 0:
             roi = roi.nonzero()
             f = f[roi]
@@ -1051,7 +1124,7 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
             fs.write(' ' + repr(xx[i]) + " " + tmps )
             fs.write("\n")
         fs.close()
-        print ("File "+outFile+" written to disk (for SHADOW).")
+        #print ("File "+outFile+" written to disk (for SHADOW).")
 
 
 #
@@ -1157,24 +1230,24 @@ def main():
     # initialize
     dm = dabam()
 
-    dm.set_input_rootFile("tmp")
-    # get arguments of dabam command line
-    dm.set_from_command_line()
+    dm.set_input_rootFile("tmp") # write files by default
+    dm.set_from_command_line()   # get arguments of dabam command line
 
-    #
-    # if runTests selected
-    #
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>",dm.get_input_value("runTests"))
-    if dm.get_input_value("runTests"):
+    if dm.get_input_value("runTests"): # if runTests selected
+        dm.set_input_rootFile("")      # avoid output files
         test_dabam_names()
         test_dabam_stdev_slopes()
     else:
-        # access data
-        dm.load()
+
+        dm.load()        # access data
+        #todo: remove
+        print(dm._latex_line())
+
+
+
+
         if dm.get_input_value("plot") != None:
             dm.plot()
-
-
 
 #
 # main program
