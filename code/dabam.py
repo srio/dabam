@@ -1,7 +1,7 @@
 """
 
 dabam: (dataBase for metrology)
-       python tools for processing remote files containing the results
+       python module for processing remote files containing the results
        of metrology measurements on X-ray mirrors
 
        classes:
@@ -15,8 +15,6 @@ dabam: (dataBase for metrology)
              func_ellipse_slopes_amparo
              func_ellipse_amparo
              write_shadowSurface
-             get_arguments
-             get_metadata_and_data
 
  
        MODIFICATION HISTORY:
@@ -49,6 +47,7 @@ except ImportError:
 
 
 class dabam(object):
+
     def __init__(self):
         self.description="dabam.py: python program to access and evaluate DAta BAse for Metrology (DABAM) files. See http://ftp.esrf.eu/pub/scisoft/dabam/README.md"
 
@@ -210,23 +209,41 @@ class dabam(object):
 
     def set_inputs_from_dictionary(self,dict):
         try:
-            self.inputs["entryNumber"]        =  dict["entryNumber"]
-            self.inputs["silent"]             =  dict["silent"]
-            self.inputs["localFileRoot"]      =  dict["localFileRoot"]
-            self.inputs["rootFile"]           =  dict["rootFile"]
-            self.inputs["setDetrending"]      =  dict["setDetrending"]
-            self.inputs["binS"]               =  dict["binS"]
-            self.inputs["binH"]               =  dict["binH"]
-            self.inputs["shadowCalc"]         =  dict["shadowCalc"]
-            self.inputs["shadowNy"]           =  dict["shadowNy"]
-            self.inputs["shadowNx"]           =  dict["shadowNx"]
-            self.inputs["shadowWidth"]        =  dict["shadowWidth"]
-            self.inputs["multiply"]           =  dict["multiply"]
-            self.inputs["useHeightsOrSlopes"] =  dict["useHeightsOrSlopes"]
-            self.inputs["useAbscissasColumn"] =  dict["useAbscissasColumn"]
-            self.inputs["useOrdinatesColumn"] =  dict["useOrdinatesColumn"]
-            self.inputs["plot"]               =  dict["plot"]
-            self.inputs["runTests"]           =  dict["runTests"]
+            # self.inputs["entryNumber"]        =  dict["entryNumber"]
+            # self.inputs["silent"]             =  dict["silent"]
+            # self.inputs["localFileRoot"]      =  dict["localFileRoot"]
+            # self.inputs["rootFile"]           =  dict["rootFile"]
+            # self.inputs["setDetrending"]      =  dict["setDetrending"]
+            # self.inputs["binS"]               =  dict["binS"]
+            # self.inputs["binH"]               =  dict["binH"]
+            # self.inputs["shadowCalc"]         =  dict["shadowCalc"]
+            # self.inputs["shadowNy"]           =  dict["shadowNy"]
+            # self.inputs["shadowNx"]           =  dict["shadowNx"]
+            # self.inputs["shadowWidth"]        =  dict["shadowWidth"]
+            # self.inputs["multiply"]           =  dict["multiply"]
+            # self.inputs["useHeightsOrSlopes"] =  dict["useHeightsOrSlopes"]
+            # self.inputs["useAbscissasColumn"] =  dict["useAbscissasColumn"]
+            # self.inputs["useOrdinatesColumn"] =  dict["useOrdinatesColumn"]
+            # self.inputs["plot"]               =  dict["plot"]
+            # self.inputs["runTests"]           =  dict["runTests"]
+
+            self.set_input_entryNumber        ( dict["entryNumber"]         )
+            self.set_input_silent             ( dict["silent"]              )
+            self.set_input_localFileRoot      ( dict["localFileRoot"]       )
+            self.set_input_rootFile           ( dict["rootFile"]            )
+            self.set_input_setDetrending      ( dict["setDetrending"]       )
+            self.set_input_binS               ( dict["binS"]                )
+            self.set_input_binH               ( dict["binH"]                )
+            self.set_input_shadowCalc         ( dict["shadowCalc"]          )
+            self.set_input_shadowNy           ( dict["shadowNy"]            )
+            self.set_input_shadowNx           ( dict["shadowNx"]            )
+            self.set_input_shadowWidth        ( dict["shadowWidth"]         )
+            self.set_input_multiply           ( dict["multiply"]            )
+            self.set_input_useHeightsOrSlopes ( dict["useHeightsOrSlopes"]  )
+            self.set_input_useAbscissasColumn ( dict["useAbscissasColumn"]  )
+            self.set_input_useOrdinatesColumn ( dict["useOrdinatesColumn"]  )
+            self.set_input_plot               ( dict["plot"]                )
+            self.set_input_runTests           ( dict["runTests"]            )
         except:
             raise Exception("Failed setting dabam input parameters from dictionary")
 
@@ -346,23 +363,23 @@ class dabam(object):
             outFile = self.get_input_value("rootFile") + "Header.txt"
             with open(outFile, mode='w') as f1:
                 json.dump(self.h, f1, indent=2)
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 print ("File "+outFile+" containing metadata written to disk.")
 
         #
         # Dump heights and slopes profiles to files
         #
         if self.get_input_value("rootFile") != "":
-            outFile = self.inputs["rootFile"]+'Heights.dat'
+            outFile = self.get_input_value("rootFile")+'Heights.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.zprof.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  heights profile\nN 2\nL  coordinate[m]  height[m]"%(outFile))
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 print ("File "+outFile+" containing heights profile written to disk.")
 
-            outFile = self.inputs["rootFile"]+'Slopes.dat'
+            outFile = self.get_input_value("rootFile")+'Slopes.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.sz.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  slopes profile\nN 2\nL  coordinate[m]  slopes[rad]"%(outFile))
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk: Columns are:\n  coordinate(m),slopes(rad).")
 
 
@@ -372,7 +389,7 @@ class dabam(object):
             outFile = self.get_input_value("rootFile")+'PSD.dat'
             header = "F %s\nS 1  power spectral density\nN 5\nL  freq[m^-1]  psd_heights[m^3]  psd_slopes[rad^3]  cdf(psd_h)  cdf(psd_s)"%(outFile)
             numpy.savetxt(outFile,dd,comments="#",header=header)
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk:  Columns are:\n"+
                    "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
                    "              cdf(psd_prof),cdf(psd_slope).")
@@ -386,7 +403,7 @@ class dabam(object):
             outFile = self.get_input_value("rootFile")+'HistoSlopes.dat'
             numpy.savetxt(outFile,dd,header="F %s\nS  1  histograms of slopes\nN 3\nL  slope[rad] at bin center  counts  Gaussian with StDev = %g"%
                                             (outFile,self.stdev_profile_slopes()),comments='#')
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk. Cols: slope[rad] at bin center, counts, Gaussian.")
 
         # heights histogrtam
@@ -399,13 +416,13 @@ class dabam(object):
         #shadow file
         if self.get_input_value("shadowCalc"):
             self.write_file_for_shadow()
-            if not(self.inputs["silent"]):
+            if not(self.get_input_value("silent")):
                 outFile = self.get_input_value("rootFile")+'Shadow.dat'
                 print ("File "+outFile+" for SHADOW written to disk.")
 
 
         #info
-        if not(self.inputs["silent"]):
+        if not(self.get_input_value("silent")):
             print(self.info_profiles())
 
         if self.get_input_value("rootFile") != "":
@@ -638,7 +655,8 @@ class dabam(object):
         try:
             from matplotlib import pylab as plt
         except:
-            raise ImportError
+            print("Cannot make plots. Please install matplotlib.")
+            return None
 
         what = self.get_input_value("plot")
 
@@ -689,14 +707,14 @@ class dabam(object):
                 f7 = plt.figure(7)
                 plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y1_path"])
                 plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y2_path"])
-                plt.title("slopes histogram")
+                plt.title("slopes histogram and Gaussian with StDev: %10.3f urad"%(1e6*self.stdev_profile_slopes()))
                 plt.xlabel("Z' [urad]")
                 plt.ylabel("counts")
             elif (iwhat == "histo_h" ):
                 f8 = plt.figure(8)
                 plt.plot(1e9*self.histoHeights["x_path"],self.histoHeights["y1_path"])
                 plt.plot(1e9*self.histoHeights["x_path"],self.histoHeights["y2_path"])
-                plt.title("heights histogram")
+                plt.title("heights histogram and Gaussian with StDev: %10.3f nm"%(1e9*self.stdev_profile_heights()))
                 plt.xlabel("Z [nm]")
                 plt.ylabel("counts")
             else:
@@ -822,7 +840,7 @@ class dabam(object):
             if int(self.get_input_value("useHeightsOrSlopes")) == 1:
                 col_ordinates_title = 'slopes'
 
-        if not(self.inputs["silent"]):
+        if not(self.get_input_value("silent")):
             print("Using: abscissas column index %d (mirror coordinates)"%(col_abscissas))
             print("       ordinates column index %d (profile %s)"%(col_ordinates,col_ordinates_title))
 
