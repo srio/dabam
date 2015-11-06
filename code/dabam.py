@@ -57,12 +57,12 @@ class dabam(object):
             'entryNumber':1,         # 'an integer indicating the DABAM entry number'
             'silent':False,          # 'Silent mode. Default is No'
             'localFileRoot':None,    # 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). Default=None, thus use remote file'
-            'rootFile':"",           # 'Define the root for output files. Default is "", so no output files'
+            'outputFileRoot':"",     # 'Define the root for output files. Default is "", so no output files'
             'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=-2'
             'binS':1e-7,             # 'Binsize of the slopes histogram in rads. Default is 1e-7'
             'binH':1e-10,            # 'Binsize of the heights histogram in m. Default is 1e-10'
             'shadowCalc':False,      # 'Write file with mesh for SHADOW. Default=No'
-            'shadowNy':199,          # 'For SHADOW file, the number of points along Y (length). Default=199'
+            'shadowNy':-1,           # 'For SHADOW file, the number of points along Y (length). If negative, use the profile points. Default=-1'
             'shadowNx':11,           # 'For SHADOW file, the number of points along X (width). Default=11'
             'shadowWidth':6.0,       # 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
             'multiply':1.0,          # 'Multiply input profile (slope or height) by this number (to play with StDev values). Default=1.0'
@@ -99,8 +99,8 @@ class dabam(object):
         self.inputs["silent"] = value
     def set_input_localFileRoot      (self,value):
         self.inputs["localFileRoot"] = value
-    def set_input_rootFile           (self,value):
-        self.inputs["rootFile"] = value
+    def set_input_outputFileRoot     (self,value):
+        self.inputs["outputFileRoot"] = value
     def set_input_setDetrending      (self,value):
         self.inputs["setDetrending"] = value
     def set_input_binS            (self,value):
@@ -135,18 +135,25 @@ class dabam(object):
         # define default aparameters taken from command arguments
         #
         parser = argparse.ArgumentParser(description=self.description)
+
         # main argument
+
         parser.add_argument('entryNumber', nargs='?', metavar='N', type=int, default=self.get_input_value('entryNumber'),
             help=self.get_input_value_help('entryNumber'))
 
-        # options
+        parser.add_argument('-'+self.get_input_value_short_name('runTests'), '--runTests', action='store_true',
+            help=self.get_input_value_help('runTests'))
+
+        # options (flags)
 
         parser.add_argument('-'+self.get_input_value_short_name('silent'),'--silent', action='store_true', help=self.get_input_value_help('silent'))
 
+        #options (parameters)
+
         parser.add_argument('-'+self.get_input_value_short_name('localFileRoot'), '--localFileRoot', help=self.get_input_value_help('localFileRoot'))
 
-        parser.add_argument('-'+self.get_input_value('rootFile'), '--rootFile', default=self.get_input_value('rootFile'),
-            help=self.get_input_value_help('rootFile'))
+        parser.add_argument('-'+self.get_input_value('outputFileRoot'), '--outputFileRoot', default=self.get_input_value('outputFileRoot'),
+            help=self.get_input_value_help('outputFileRoot'))
 
         parser.add_argument('-'+self.get_input_value_short_name('setDetrending'), '--setDetrending', default=self.get_input_value('setDetrending'),
             help=self.get_input_value_help('setDetrending'))
@@ -183,15 +190,13 @@ class dabam(object):
         parser.add_argument('-'+self.get_input_value_short_name('plot'), '--plot', default=self.get_input_value('plot'),
             help=self.get_input_value_help('plot'))
 
-        parser.add_argument('-'+self.get_input_value_short_name('runTests'), '--runTests', action='store_true',
-            help=self.get_input_value_help('runTests'))
 
         args = parser.parse_args()
 
         self.set_input_entryNumber(args.entryNumber)
         self.set_input_silent(args.silent)
         self.set_input_localFileRoot(args.localFileRoot)
-        self.set_input_rootFile(args.rootFile)
+        self.set_input_outputFileRoot(args.outputFileRoot)
         self.set_input_setDetrending(args.setDetrending)
         self.set_input_binS(args.binS)
         self.set_input_binH(args.binH)
@@ -212,7 +217,7 @@ class dabam(object):
             # self.inputs["entryNumber"]        =  dict["entryNumber"]
             # self.inputs["silent"]             =  dict["silent"]
             # self.inputs["localFileRoot"]      =  dict["localFileRoot"]
-            # self.inputs["rootFile"]           =  dict["rootFile"]
+            # self.inputs["outputFileRoot"]     =  dict["outputFileRoot"]
             # self.inputs["setDetrending"]      =  dict["setDetrending"]
             # self.inputs["binS"]               =  dict["binS"]
             # self.inputs["binH"]               =  dict["binH"]
@@ -230,7 +235,7 @@ class dabam(object):
             self.set_input_entryNumber        ( dict["entryNumber"]         )
             self.set_input_silent             ( dict["silent"]              )
             self.set_input_localFileRoot      ( dict["localFileRoot"]       )
-            self.set_input_rootFile           ( dict["rootFile"]            )
+            self.set_input_outputFileRoot     ( dict["outputFileRoot"]            )
             self.set_input_setDetrending      ( dict["setDetrending"]       )
             self.set_input_binS               ( dict["binS"]                )
             self.set_input_binH               ( dict["binH"]                )
@@ -275,22 +280,22 @@ class dabam(object):
 
     def get_input_value_help(self,key):
 
-        if key == 'entryNumber':        return 'an integer indicating the DABAM entry number or the remote profile files'
-        if key == 'silent':             return 'avoid printing information messages.'
+        if key == 'entryNumber':        return 'An integer indicating the DABAM entry number or the remote profile files'
+        if key == 'silent':             return 'Avoid printing information messages.'
         if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). If unset, use remore access'
-        if key == 'rootFile':           return 'Define the root for output files. Set to "" for no output.  Default is "'+self.get_input_value("rootFile")+'"'
+        if key == 'outputFileRoot':     return 'Define the root for output files. Set to "" for no output.  Default is "'+self.get_input_value("outputFileRoot")+'"'
         if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=%d'%self.get_input_value("setDetrending")
         if key == 'binS':               return 'Binsize of the slopes histogram in rads. Default is 1e-7'
         if key == 'binH':               return 'Binsize of the heights histogram in m. Default is 1e-10'
         if key == 'shadowCalc':         return 'Write file with mesh for SHADOW. Default=No'
-        if key == 'shadowNy':           return 'For SHADOW file, the number of points along Y (length). Default=199'
-        if key == 'shadowNx':           return 'For SHADOW file, the number of points along X (width). Default=11'
-        if key == 'shadowWidth':        return 'For SHADOW file, the surface dimension along X (width) in cm. Default=6.0'
-        if key == 'multiply':           return 'Multiply input profile (slope or height) by this number (to play with StDev values). Default=1.0'
-        if key == 'useHeightsOrSlopes': return 'Force calculations using profile heights (0) or slopes (1). Overwrites FILE_FORMAT keyword. Default=-1 (like FILE_FORMAT)'
-        if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=0'
-        if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=1'
-        if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s cdf_h cdf_s. histo_s histo_h. Default=None'
+        if key == 'shadowNy':           return 'For SHADOW file, the number of points along Y (length). If negative, use the profile points. Default=%d'%self.get_input_value("shadowNy")
+        if key == 'shadowNx':           return 'For SHADOW file, the number of points along X (width). Default=%d'%self.get_input_value("shadowNx")
+        if key == 'shadowWidth':        return 'For SHADOW file, the surface dimension along X (width) in cm. Default=%4.2f'%self.get_input_value("shadowWidth")
+        if key == 'multiply':           return 'Multiply input profile (slope or height) by this number (to play with StDev values). Default=%4.2f'%self.get_input_value("multiply")
+        if key == 'useHeightsOrSlopes': return 'Force calculations using profile heights (0) or slopes (1). If -1, used metadata keyword FILE_FORMAT. Default=%d'%self.get_input_value("useHeightsOrSlopes")
+        if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=%d'%self.get_input_value("useAbscissasColumn")
+        if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=%d'%self.get_input_value("useOrdinatesColumn")
+        if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s cdf_h cdf_s. histo_s histo_h. Default=%s'%repr(self.get_input_value("plot"))
         if key == 'runTests':           return 'Run test cases'
         return ''
 
@@ -300,7 +305,7 @@ class dabam(object):
         if key == 'entryNumber':         return 'N'
         if key == 'silent':              return 's'
         if key == 'localFileRoot':       return 'l'
-        if key == 'rootFile':            return 'r'
+        if key == 'outputFileRoot':      return 'r'
         if key == 'setDetrending':       return 'D'
         if key == 'binS':                return 'b'
         if key == 'binH':                return 'e'
@@ -345,22 +350,24 @@ class dabam(object):
 
         # test consistency
         if (self.get_input_value("localFileRoot") == None):
-            if self.get_input_value("entryNumber") == 0:
-                raise Exception("Error: entry number cannot be zero for remote access.")
+            if self.get_input_value("entryNumber") <= 0:
+                raise Exception("Error: entry number must be non-zero positive for remote access.")
 
         #calculate detrended profiles
-        self._load_profiles()
+        self._calc_detrended_profiles()
 
         #calculate psd
         self._calc_psd()
 
+        #calculate histograms
+        self._calc_histograms()
 
         #
         # write files
         #
         # write header file
-        if self.get_input_value("rootFile") != "":
-            outFile = self.get_input_value("rootFile") + "Header.txt"
+        if self.get_input_value("outputFileRoot") != "":
+            outFile = self.get_input_value("outputFileRoot") + "Header.txt"
             with open(outFile, mode='w') as f1:
                 json.dump(self.h, f1, indent=2)
             if not(self.get_input_value("silent")):
@@ -369,14 +376,14 @@ class dabam(object):
         #
         # Dump heights and slopes profiles to files
         #
-        if self.get_input_value("rootFile") != "":
-            outFile = self.get_input_value("rootFile")+'Heights.dat'
+        if self.get_input_value("outputFileRoot") != "":
+            outFile = self.get_input_value("outputFileRoot")+'Heights.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.zprof.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  heights profile\nN 2\nL  coordinate[m]  height[m]"%(outFile))
             if not(self.get_input_value("silent")):
                 print ("File "+outFile+" containing heights profile written to disk.")
 
-            outFile = self.get_input_value("rootFile")+'Slopes.dat'
+            outFile = self.get_input_value("outputFileRoot")+'Slopes.dat'
             dd=numpy.concatenate( (self.sy.reshape(-1,1), self.sz.reshape(-1,1)),axis=1)
             numpy.savetxt(outFile,dd,comments="#",header="F %s\nS 1  slopes profile\nN 2\nL  coordinate[m]  slopes[rad]"%(outFile))
             if not(self.get_input_value("silent")):
@@ -384,9 +391,9 @@ class dabam(object):
 
 
         #write psd file
-        if self.get_input_value("rootFile") != "":
+        if self.get_input_value("outputFileRoot") != "":
             dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, self.cdfHeights, self.cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
-            outFile = self.get_input_value("rootFile")+'PSD.dat'
+            outFile = self.get_input_value("outputFileRoot")+'PSD.dat'
             header = "F %s\nS 1  power spectral density\nN 5\nL  freq[m^-1]  psd_heights[m^3]  psd_slopes[rad^3]  cdf(psd_h)  cdf(psd_s)"%(outFile)
             numpy.savetxt(outFile,dd,comments="#",header=header)
             if not(self.get_input_value("silent")):
@@ -394,22 +401,20 @@ class dabam(object):
                    "  freq (m^-1),psd_prof(m^3),psd_slope(rad^3),\n"+
                    "              cdf(psd_prof),cdf(psd_slope).")
 
-        #calculate and write histograms
-        self.calc_histograms()
 
         # write slopes histogram
-        if self.get_input_value("rootFile") != "":
+        if self.get_input_value("outputFileRoot") != "":
             dd=numpy.concatenate( (self.histoSlopes["x"],self.histoSlopes["y1"],self.histoSlopes["y2"] ) ,axis=0).reshape(3,-1).transpose()
-            outFile = self.get_input_value("rootFile")+'HistoSlopes.dat'
+            outFile = self.get_input_value("outputFileRoot")+'HistoSlopes.dat'
             numpy.savetxt(outFile,dd,header="F %s\nS  1  histograms of slopes\nN 3\nL  slope[rad] at bin center  counts  Gaussian with StDev = %g"%
                                             (outFile,self.stdev_profile_slopes()),comments='#')
             if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk. Cols: slope[rad] at bin center, counts, Gaussian.")
 
         # heights histogrtam
-        if self.get_input_value("rootFile") != "":
+        if self.get_input_value("outputFileRoot") != "":
             dd=numpy.concatenate( (self.histoHeights["x"],self.histoHeights["y1"],self.histoHeights["y2"] ) ,axis=0).reshape(3,-1).transpose()
-            outFile = self.get_input_value("rootFile")+'HistoHeights.dat'
+            outFile = self.get_input_value("outputFileRoot")+'HistoHeights.dat'
             numpy.savetxt(outFile,dd,header="F %s\nS  1  histograms of heights\nN 3\nL  heights[m] at bin center  counts  Gaussian with StDev = %g"%
                                             (outFile,self.stdev_profile_heights()),comments='#')
 
@@ -417,7 +422,7 @@ class dabam(object):
         if self.get_input_value("shadowCalc"):
             self.write_file_for_shadow()
             if not(self.get_input_value("silent")):
-                outFile = self.get_input_value("rootFile")+'Shadow.dat'
+                outFile = self.get_input_value("outputFileRoot")+'Shadow.dat'
                 print ("File "+outFile+" for SHADOW written to disk.")
 
 
@@ -425,8 +430,8 @@ class dabam(object):
         if not(self.get_input_value("silent")):
             print(self.info_profiles())
 
-        if self.get_input_value("rootFile") != "":
-            outFile = self.get_input_value("rootFile")+'Info.txt'
+        if self.get_input_value("outputFileRoot") != "":
+            outFile = self.get_input_value("outputFileRoot")+'Info.txt'
             f = open(outFile,'w')
             f.write(self.info_profiles())
             f.close()
@@ -470,7 +475,7 @@ class dabam(object):
 
 
 
-    def calc_histograms(self):
+    def _calc_histograms(self):
         """
         Calculates slopes and heights histograms and also the Gaussians with their StDev
 
@@ -557,11 +562,11 @@ class dabam(object):
         #inputs
         npointsy = int(self.get_input_value("shadowNy"))
         npointsx = int(self.get_input_value("shadowNx"))
-        mirror_width = self.get_input_value("shadowWidth") # in cm
+        mirror_width = float(self.get_input_value("shadowWidth")) # in cm
 
         # units to cm
-        y = self.sy * 100.0 # from m to cm
-        z = self.zprof * 100.0 # from m to cm
+        y = (self.sy).copy() * 100.0 # from m to cm
+        z = (self.zprof).copy() * 100.0 # from m to cm
 
         # set origin at the center of the mirror. TODO: allow any point for origin
         z = z - z.min()
@@ -569,14 +574,22 @@ class dabam(object):
 
 
         # interpolate the profile (y,z) to have npointsy points (new profile yy,zz)
-        mirror_length = y.max() - y.min()
-        yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
-        zz = numpy.interp(yy,y,z)
+        if npointsy > 0:
+            mirror_length = y.max() - y.min()
+            yy = numpy.linspace(-mirror_length/2.0,mirror_length/2.0,npointsy)
+            zz = numpy.interp(yy,y,z)
 
-        # dump to file interpolated profile (for fun)
-        dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
-        outFile = self.get_input_value("rootFile") + "ProfileInterpolatedForShadow.dat"
-        numpy.savetxt(outFile,dd)
+            # dump to file interpolated profile (for fun)
+            if self.get_input_value("outputFileRoot") != "":
+                dd = numpy.concatenate( (yy.reshape(-1,1), zz.reshape(-1,1)),axis=1)
+                outFile = self.get_input_value("outputFileRoot") + "ProfileInterpolatedForShadow.dat"
+                numpy.savetxt(outFile,dd)
+                if not(self.get_input_value("silent")):
+                    print("File written to disk: %s"%outFile)
+        else:
+            yy = y
+            zz = z
+            npointsy = yy.size
 
         # fill the mesh arrays xx,yy,s with interpolated profile yy,zz
         xx=numpy.linspace(-mirror_width/2.0,mirror_width/2.0,npointsx)
@@ -585,7 +598,7 @@ class dabam(object):
             s[:,i]=zz
 
         # write Shadow file
-        outFile = self.get_input_value("rootFile") + "Shadow.dat"
+        outFile = self.get_input_value("outputFileRoot") + "Shadow.dat"
         tmp = write_shadowSurface(s,xx,yy,outFile=outFile)
 
 
@@ -730,7 +743,7 @@ class dabam(object):
 
         if self.is_remote_access():
             input_option = self.get_input_value("entryNumber")
-            inFileRoot = 'dabam-'+str(input_option)
+            inFileRoot = "dabam-"+"%03d"%(input_option)
         else:
             inFileRoot = self.get_input_value("localFileRoot")
 
@@ -786,7 +799,7 @@ class dabam(object):
                 print ("Error accessing local file: "+self.file_data())
 
 
-    def _load_profiles(self):
+    def _calc_detrended_profiles(self):
         """
         Retrieve detrended profiles (slope and height): abscissa slope slope_detrended heights heights_detrended
         :return:
@@ -829,11 +842,17 @@ class dabam(object):
         col_ordinates_title = 'unknown'
         if int(self.get_input_value("useHeightsOrSlopes")) == -1:  #default, read from file
             if self.h['FILE_FORMAT'] == 1:  # slopes in Col2
+                col_ordinates = 1
                 col_ordinates_title = 'slopes'
             if self.h['FILE_FORMAT'] == 2:  # heights in Col2
+                col_ordinates = 2
                 col_ordinates_title = 'heights'
             if self.h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
+                col_ordinates = 1
                 col_ordinates_title = 'slopes'
+            if self.h['FILE_FORMAT'] == 4:  # heights in Col2, file X1 Y1 X2 Y2
+                col_ordinates = 2
+                col_ordinates_title = 'heights'
         else:
             if int(self.get_input_value("useHeightsOrSlopes")) == 0:
                 col_ordinates_title = 'heights'
@@ -933,7 +952,6 @@ class dabam(object):
         self.psdSlopes = psdSlopes
         self.cdfHeights = cdfHeights
         self.cdfSlopes = cdfSlopes
-        return None
 
 
     def _latex_line(self):
@@ -1248,11 +1266,11 @@ def main():
     # initialize
     dm = dabam()
 
-    dm.set_input_rootFile("tmp") # write files by default
+    dm.set_input_outputFileRoot("tmp") # write files by default
     dm.set_from_command_line()   # get arguments of dabam command line
 
     if dm.get_input_value("runTests"): # if runTests selected
-        dm.set_input_rootFile("")      # avoid output files
+        dm.set_input_outputFileRoot("")      # avoid output files
         test_dabam_names()
         test_dabam_stdev_slopes()
     else:
