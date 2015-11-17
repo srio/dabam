@@ -58,7 +58,7 @@ class dabam(object):
             'silent':False,          # 'Silent mode. Default is No'
             'localFileRoot':None,    # 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata).'
             'outputFileRoot':"",     # 'Define the root for output files. Default is "", so no output files'
-            'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. '
+            'setDetrending':-2,      # 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse(optimized) -4=ellipse(design)'
             'nbinS':101,             # 'number of bins of the slopes histogram in rads. '
             'nbinH':101,             # 'number of bins heights histogram in m. '
             'shadowCalc':False,      # 'Write file with mesh for SHADOW.'
@@ -95,37 +95,37 @@ class dabam(object):
     #variables
     def set_input_entryNumber(self,value):
         self.inputs["entryNumber"] = value
-    def set_input_silent            (self,value):
+    def set_input_silent(self,value):
         self.inputs["silent"] = value
-    def set_input_localFileRoot      (self,value):
+    def set_input_localFileRoot(self,value):
         self.inputs["localFileRoot"] = value
-    def set_input_outputFileRoot     (self,value):
+    def set_input_outputFileRoot(self,value):
         self.inputs["outputFileRoot"] = value
-    def set_input_setDetrending      (self,value):
+    def set_input_setDetrending(self,value):
         self.inputs["setDetrending"] = value
-    def set_input_nbinS            (self,value):
+    def set_input_nbinS(self,value):
         self.inputs["nbinS"] = value
-    def set_input_nbinH            (self,value):
+    def set_input_nbinH(self,value):
         self.inputs["nbinH"] = value
-    def set_input_shadowCalc         (self,value):
+    def set_input_shadowCalc(self,value):
         self.inputs["shadowCalc"] = value
-    def set_input_shadowNy           (self,value):
+    def set_input_shadowNy(self,value):
         self.inputs["shadowNy"] = value
-    def set_input_shadowNx           (self,value):
+    def set_input_shadowNx(self,value):
         self.inputs["shadowNx"] = value
-    def set_input_shadowWidth        (self,value):
+    def set_input_shadowWidth(self,value):
         self.inputs["shadowWidth"] = value
-    def set_input_multiply           (self,value):
+    def set_input_multiply(self,value):
         self.inputs["multiply"] = value
-    def set_input_useHeightsOrSlopes (self,value):
+    def set_input_useHeightsOrSlopes(self,value):
         self.inputs["useHeightsOrSlopes"] = value
-    def set_input_useAbscissasColumn (self,value):
+    def set_input_useAbscissasColumn(self,value):
         self.inputs["useAbscissasColumn"] = value
-    def set_input_useOrdinatesColumn (self,value):
+    def set_input_useOrdinatesColumn(self,value):
         self.inputs["useOrdinatesColumn"] = value
-    def set_input_plot               (self,value):
+    def set_input_plot(self,value):
         self.inputs["plot"] = value
-    def set_input_runTests           (self,value):
+    def set_input_runTests(self,value):
         self.inputs["runTests"] = value
 
     #others
@@ -235,10 +235,10 @@ class dabam(object):
             self.set_input_entryNumber        ( dict["entryNumber"]         )
             self.set_input_silent             ( dict["silent"]              )
             self.set_input_localFileRoot      ( dict["localFileRoot"]       )
-            self.set_input_outputFileRoot     ( dict["outputFileRoot"]            )
+            self.set_input_outputFileRoot     ( dict["outputFileRoot"]      )
             self.set_input_setDetrending      ( dict["setDetrending"]       )
-            self.set_input_nbinS               ( dict["nbinS"]                )
-            self.set_input_nbinH               ( dict["nbinH"]                )
+            self.set_input_nbinS              ( dict["nbinS"]               )
+            self.set_input_nbinH              ( dict["nbinH"]               )
             self.set_input_shadowCalc         ( dict["shadowCalc"]          )
             self.set_input_shadowNy           ( dict["shadowNy"]            )
             self.set_input_shadowNx           ( dict["shadowNx"]            )
@@ -273,6 +273,7 @@ class dabam(object):
         try:
             return self.inputs[key]
         except:
+            print("****get_input_value: Error returning value for key=%s"%(key))
             return None
 
     def get_inputs_as_dictionary(self):
@@ -284,7 +285,7 @@ class dabam(object):
         if key == 'silent':             return 'Avoid printing information messages.'
         if key == 'localFileRoot':      return 'Define the name of local DABAM file root (<name>.dat for data, <name>.txt for metadata). If unset, use remore access'
         if key == 'outputFileRoot':     return 'Define the root for output files. Set to "" for no output.  Default is "'+self.get_input_value("outputFileRoot")+'"'
-        if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse. Default=%d'%self.get_input_value("setDetrending")
+        if key == 'setDetrending':      return 'Detrending: if >0 is the polynomial degree, -1=skip, -2=automatic, -3=ellipse(optimized), -4=ellipse(design). Default=%d'%self.get_input_value("setDetrending")
         if key == 'nbinS':              return 'Number of bins for the slopes histogram in rads. Default is %d'%self.get_input_value("nbinS")
         if key == 'nbinH':              return 'Number of bins for the heights histogram in m. Default is %d'%self.get_input_value("nbinH")
         if key == 'shadowCalc':         return 'Write file with mesh for SHADOW. Default=No'
@@ -445,10 +446,10 @@ class dabam(object):
         return self.sz.std()
 
     def stdev_psd_heights(self):
-        return ( numpy.sqrt(cdf(self.f,self.psdHeights)) ).max()
+        return self.cdfHeights[-1]
 
     def stdev_psd_slopes(self):
-        return ( numpy.sqrt(cdf(self.f,self.psdHeights)) ).max()
+        return self.cdfSlopes[-1]
 
     def stdev_user_heights(self):
         return self.h['CALC_HEIGHT_RMS']
@@ -618,8 +619,7 @@ class dabam(object):
             else:
                 polDegree = 1      # linear detrending
         else:
-            polDegree = int(self.get_input_value("setDetrending\n"))
-
+            polDegree = int(self.get_input_value("setDetrending"))
 
 
         #;
@@ -647,7 +647,17 @@ class dabam(object):
         elif polDegree == -1:
            txt += 'No detrending applied.\n'
         elif polDegree == -3:
-           txt += 'Ellipse detrending applied.\n'
+           txt += 'Ellipse detrending applied. Using Optimized parameters:\n'
+           txt += '         p = %f m \n'%self.coeffs[0]
+           txt += '         q = %f m \n'%self.coeffs[1]
+           txt += '         theta = %f rad \n'%self.coeffs[2]
+           txt += '         vertical shift = %f nm \n'%self.coeffs[3]
+        elif polDegree == -4:
+           txt += 'Ellipse detrending applied. Usinng Design parameters:\n'
+           txt += '         p = %f m \n'%self.coeffs[0]
+           txt += '         q = %f m \n'%self.coeffs[1]
+           txt += '         theta = %f rad \n'%self.coeffs[2]
+           txt += '         vertical shift = %f nm \n'%self.coeffs[3]
 
         txt += self.stdev_summary()
 
@@ -710,15 +720,15 @@ class dabam(object):
             elif (iwhat == "cdf_h"):
                 f5 = plt.figure(5)
                 plt.semilogx(self.f,self.cdfHeights)
-                plt.title("Lambda CDF(PDF) of heights profile")
+                plt.title("sqrt(Antiderivative(PDF_s)) ~ StDev of heights profile")
                 plt.xlabel("f [m^-1]")
-                plt.ylabel("heights Lambda")
+                plt.ylabel("heights StDev")
             elif (iwhat == "cdf_s"):
                 f6 = plt.figure(6)
                 plt.semilogx(self.f,self.cdfSlopes)
-                plt.title("Lambda CDF(PDF) of slopes profile")
+                plt.title("sqrt(Antiderivatice(PDF_h)) ~ StDev of slopes profile")
                 plt.xlabel("f [m^-1]")
-                plt.ylabel("slopes Lambda")
+                plt.ylabel("slopes StDev")
             elif (iwhat == "histo_s" ):
                 f7 = plt.figure(7)
                 plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y1_path"])
@@ -793,13 +803,13 @@ class dabam(object):
             self.a = a
         else:
             try:
-                with open(self.file_data(), mode='r') as f1:
-                    h = json.load(f1)
-                skipLines = h['FILE_HEADER_LINES']
-                a = numpy.loadtxt(inFileDat, skiprows=skipLines) #, dtype="float64" )
+                skipLines = self.h['FILE_HEADER_LINES']
+                import os
+                a = numpy.loadtxt(self.file_data(), skiprows=skipLines) #, dtype="float64" )
                 self.a = a
             except:
                 print ("Error accessing local file: "+self.file_data())
+
 
 
     def _calc_detrended_profiles(self):
@@ -885,8 +895,6 @@ class dabam(object):
 
         # define detrending to apply: >0 polynomial prder, -1=None, -2=Default, -3=elliptical
 
-
-
         if int(self.get_input_value("setDetrending")) == -2: # this is the default
             if (self.h['SURFACE_SHAPE']).lower() == "elliptical":
                 polDegree = -3     # elliptical detrending
@@ -904,16 +912,58 @@ class dabam(object):
         else:
             coeffs = None
 
-        if polDegree == -3: # ellipse
+        if polDegree == -3: # ellipse (optimized)
             coeffs = None
             try:
-                from scipy.optimize import curve_fit
+                from scipy.optimize import curve_fit, leastsq
             except:
                 raise ImportError("Cannot perform ellipse detrending: please install scipy")
 
-            popt, cov_x = curve_fit(func_ellipse_slopes, sy, sz1, maxfev=10000)
-            zfit= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
-            sz = sz1 - zfit
+            print("Detrending an ellipse...")
+            if ("ELLIPSE_DESIGN_P" in self.h) and ("ELLIPSE_DESIGN_Q" in self.h) and ("ELLIPSE_DESIGN_THETA" in self.h):
+                ell_p = self.h["ELLIPSE_DESIGN_P"]
+                ell_q = self.h["ELLIPSE_DESIGN_Q"]
+                ell_theta = self.h["ELLIPSE_DESIGN_THETA"]
+
+                fitfunc_ell_slopes  =  lambda p, x: func_ellipse_slopes(x, p[0], p[1], p[2], p[3])
+
+                errfunc_ell_slopes = lambda p, x, y: fitfunc_ell_slopes(p, x) - y
+
+                p_guess = [ell_p,ell_q,ell_theta,0.0]
+
+                szGuess = fitfunc_ell_slopes(p_guess, sy)
+
+                coeffs, cov_x, infodic, mesg, ier = leastsq(errfunc_ell_slopes, p_guess, args=(sy, sz1), full_output=True)
+
+
+                #zpopt= func_ellipse_slopes(sy, popt[0], popt[1], popt[2], popt[3])
+                szOptimized  = fitfunc_ell_slopes(coeffs, sy)
+                sz = sz1 - szOptimized
+
+                print("Ellipse design parameters found in metadata: p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad"%
+                      (ell_p,ell_q,ell_theta,0.0,1e6*(sz1-szGuess).std() ))
+                print("Optimized ellipse                          : p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad\n"%
+                      (coeffs[0],coeffs[1],coeffs[2],coeffs[3],1e6*sz.std() ))
+            else:
+                print("Ellipse design parameters NOT FOUND in metadata. Guessing parameters (may be unrealistic!)")
+                coeffs, cov_x = curve_fit(func_ellipse_slopes, sy, sz1, maxfev=10000)
+                szOptimized= func_ellipse_slopes(sy, coeffs[0], coeffs[1], coeffs[2], coeffs[3])
+                sz = sz1 - szOptimized
+
+        if polDegree == -4: # ellipse (design)
+            print("Detrending an ellipse...")
+            if ("ELLIPSE_DESIGN_P" in self.h) and ("ELLIPSE_DESIGN_Q" in self.h) and ("ELLIPSE_DESIGN_THETA" in self.h):
+                coeffs = numpy.zeros(4)
+                coeffs[0] = self.h["ELLIPSE_DESIGN_P"]
+                coeffs[1] = self.h["ELLIPSE_DESIGN_Q"]
+                coeffs[2] = self.h["ELLIPSE_DESIGN_THETA"]
+                coeffs[3] = 0.0
+                fitfunc_ell_slopes  =  lambda p, x: func_ellipse_slopes(x, p[0], p[1], p[2], p[3])
+                szGuess = fitfunc_ell_slopes(coeffs, sy)
+                sz = sz1 - szGuess
+            else:
+                print("Error: Ellipse detrend parameters not found in metadata")
+                raise RuntimeError
 
 
         #;
@@ -943,11 +993,11 @@ class dabam(object):
         psdHeights,f = psd(sy,zprof,onlyrange=None)
         psdSlopes,f = psd(sy,sz,onlyrange=None)
         cdfHeights = numpy.sqrt(cdf(f,psdHeights))
-        cdfHeightsStDev = cdfHeights.max()
-        cdfHeights = 1.0 - cdfHeights/cdfHeightsStDev
+        #cdfHeightsStDev = cdfHeights.max()
+        #cdfHeights = 1.0 - cdfHeights/cdfHeightsStDev
         cdfSlopes = numpy.sqrt(cdf(f,psdSlopes))
-        cdfSlopesStDev = cdfSlopes.max()
-        cdfSlopes = 1.0 - cdfSlopes/cdfSlopesStDev
+        #cdfSlopesStDev = cdfSlopes.max()
+        #cdfSlopes = 1.0 - cdfSlopes/cdfSlopesStDev
 
 
         self.f = f
@@ -1004,7 +1054,7 @@ def cdf(sy, sz, method = 1 ):
     return zprof
 
 
-def psd(x, y, onlyrange = None):
+def psd(xx, yy, onlyrange = None):
     """
      psd: Calculates the PSD (power spectral density) from a profile
 
@@ -1022,25 +1072,29 @@ def psd(x, y, onlyrange = None):
                and interval is the spacing between points.
 
       PROCEDURE
-            S=Length*ABS(ifft(Y*Window)^2
-            Where Length is as described above, and Window is the value of
-            the optional window function
+            Use FFT
 
     """
-    n_pts = x.size
+    n_pts = xx.size
     if (n_pts <= 1):
         print ("psd: Error, must have at least 2 points.")
         return 0
 
-    xx = x
-    yy = y
-
     window=yy*0+1.
     length=xx.max()-xx.min()  # total scan length.
-    # psd
-    s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2)
+    delta = xx[1] - xx[0]
 
-    s=s[1:(n_pts/2+1*numpy.mod(n_pts,2))]  # take an odd number of points.
+    # psd from windt code
+    # s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2)
+    # s=s[0:(n_pts/2+1*numpy.mod(n_pts,2))]  # take an odd number of points.
+
+    #xianbo + luca:
+    s0 = numpy.absolute(numpy.fft.fft(yy*window))
+    s =  2 * delta * s0[0:int(len(s0)/2)]**2/s0.size # uniformed with IGOR, FFT is not symmetric around 0
+    s[0] /= 2
+    s[-1] /= 2
+
+
     n_ps=s.size                       # number of psd points.
     interval=length/(n_pts-1)         # sampling interval.
     f_min=1./length                   # minimum spatial frequency.
@@ -1067,14 +1121,17 @@ def func_ellipse_slopes(x, p, q, theta, shift):
     a = (p + q) / 2
 
     b = numpy.sqrt( numpy.abs(p * q)) * numpy.sin(theta)
-    c = numpy.sqrt(a*a - b*b)
+
+
+    c = numpy.sqrt(numpy.abs(a*a - b*b))
+
 
     epsilon = c / a
 
     # (x0,y0) are the coordinates of the center of the mirror
     # x0 = (p*p - q*q) / 4 / c
     x0 = (p - q) / 2 / epsilon
-    y0 = -b * numpy.sqrt(1 - ((x0/a)**2))
+    y0 = -b * numpy.sqrt(1.0 - ((x0/a)**2))
 
     # the versor normal to the surface at the mirror center is -grad(ellipse)
     xnor = -2 * x0 / a**2
@@ -1273,12 +1330,12 @@ def main():
     dm.set_input_outputFileRoot("tmp") # write files by default
     dm.set_from_command_line()   # get arguments of dabam command line
 
+
     if dm.get_input_value("runTests"): # if runTests selected
         dm.set_input_outputFileRoot("")      # avoid output files
         test_dabam_names()
         test_dabam_stdev_slopes()
     else:
-
         dm.load()        # access data
         #todo: remove
         print(dm._latex_line())

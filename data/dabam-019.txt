@@ -22,8 +22,11 @@
   "CALC_HEIGHT_RMS": null,
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": 0.06, 
-  "CALC_SLOPE_RMS_FACTOR": 1e-6, 
-  "USER_EXAMPLE": "This is an example of user keyword",
+  "CALC_SLOPE_RMS_FACTOR": 1e-6,
+  "ELLIPSE_DESIGN_P": 420.0,
+  "ELLIPSE_DESIGN_Q": 0.9,
+  "ELLIPSE_DESIGN_THETA": 3.052e-3,
   "USER_REFERENCE": "design parameter of ellipse: entrance arm: 420000mm; exit arm: 900mm; angle of incidence 3.052mrad",
-  "USER_ADDED_BY": "Frank Siewert"
+  "USER_ADDED_BY": "Frank Siewert",
+  "USER_EXAMPLE": "This is an example of user keyword"
 }

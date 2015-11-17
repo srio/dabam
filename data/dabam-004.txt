@@ -22,6 +22,11 @@
   "CALC_HEIGHT_RMS": null, 
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": null, 
-  "CALC_SLOPE_RMS_FACTOR": null, 
+  "CALC_SLOPE_RMS_FACTOR": null,
+  "ELLIPSE_DESIGN_P": 98.0,
+  "ELLIPSE_DESIGN_Q": 0.0755,
+  "ELLIPSE_DESIGN_THETA": 3.9e-3,
+  "USER_REFERENCE": "design parameter of ellipse: entrance arm 98m; exit arm: 75.5mm; angle of incidence: 3.9mrad",
+  "USER_ADDED_BY": "Amparo Vivo",
   "USER_EXAMPLE": "This is an example of user keyword"
 }

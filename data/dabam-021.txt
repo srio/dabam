@@ -2,7 +2,7 @@
   "FILE_FORMAT": 1, 
   "FILE_HEADER_LINES": 11, 
   "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06, 
+  "Y1_FACTOR": -1e-06,
   "YEAR_FABRICATION": null, 
   "SURFACE_SHAPE": "elliptical", 
   "FUNCTION": "plane elliptical mirror Ell2 for beamline P04 at PETRA-III. energy range: 100-3000eV", 
@@ -22,8 +22,11 @@
   "CALC_HEIGHT_RMS": null,
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": 0.5, 
-  "CALC_SLOPE_RMS_FACTOR": 1e-6, 
-  "USER_EXAMPLE": "This is an example of user keyword",
+  "CALC_SLOPE_RMS_FACTOR": 1e-6,
+  "ELLIPSE_DESIGN_P": 7.5,
+  "ELLIPSE_DESIGN_Q": 2.5,
+  "ELLIPSE_DESIGN_THETA": 10.4e-3,
   "USER_REFERENCE": "design parameter of ellipse: entrance arm: 7500mm; exit arm: 2500mm; angle of incidence 0.6deg",
-  "USER_ADDED_BY": "Frank Siewert"
+  "USER_ADDED_BY": "Frank Siewert",
+  "USER_EXAMPLE": "NOTE THAT THIS SLOPES PROFILE HAS BEEN MULTIPLIED BY -1 (see Y1_FACTOR)"
 }

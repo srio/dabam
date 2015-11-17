@@ -11,7 +11,7 @@
   "THICK": null,
   "LENGTH_OPTICAL": 1.130, 
   "SUBSTRATE": null, 
-  "COATING": null, 
+  "COATING": null,
   "FACILITY": "Helmholtz Zentrum Berlin", 
   "INSTRUMENT": null, 
   "POLISHING": null, 

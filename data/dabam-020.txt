@@ -2,7 +2,7 @@
   "FILE_FORMAT": 1, 
   "FILE_HEADER_LINES": 11, 
   "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06, 
+  "Y1_FACTOR": -1e-06,
   "YEAR_FABRICATION": null, 
   "SURFACE_SHAPE": "elliptical", 
   "FUNCTION": null, 
@@ -22,8 +22,11 @@
   "CALC_HEIGHT_RMS": null,
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": 0.5, 
-  "CALC_SLOPE_RMS_FACTOR": 1e-6, 
-  "USER_EXAMPLE": "This is an example of user keyword",
+  "CALC_SLOPE_RMS_FACTOR": 1e-6,
+  "ELLIPSE_DESIGN_P": 9.0,
+  "ELLIPSE_DESIGN_Q": 0.35,
+  "ELLIPSE_DESIGN_THETA": 0.0436,
   "USER_REFERENCE": "design parameter of ellipse: entrance arm 9000mm; exit arm: 350mm; angle of incidence: 2.5deg",
-  "USER_ADDED_BY": "Frank Siewert"
+  "USER_ADDED_BY": "Frank Siewert",
+  "USER_EXAMPLE": "NOTE THAT THIS SLOPES PROFILE HAS BEEN MULTIPLIED BY -1 (see Y1_FACTOR)"
 }

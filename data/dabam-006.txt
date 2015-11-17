@@ -2,7 +2,7 @@
   "FILE_FORMAT": 1, 
   "FILE_HEADER_LINES": 4, 
   "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06, 
+  "Y1_FACTOR": 1e-06,
   "Y2_FACTOR": 1e-06, 
   "YEAR_FABRICATION": 2009, 
   "SURFACE_SHAPE": "Elliptical", 
@@ -25,5 +25,10 @@
   "CALC_HEIGHT_RMS_FACTOR": null, 
   "CALC_SLOPE_RMS": null, 
   "CALC_SLOPE_RMS_FACTOR": null, 
+  "ELLIPSE_DESIGN_P": 4.5,
+  "ELLIPSE_DESIGN_Q": 0.49914,
+  "ELLIPSE_DESIGN_THETA": 3.499e-3,
+  "USER_REFERENCE": "design parameter of ellipse: entrance arm 4.500m, exit arm 0.49914 m, grazing angle 3.499 mrad",
+  "USER_ADDED_BY": "Muriel Tomasset",
   "USER_EXAMPLE": "This is an example of user keyword"
 }

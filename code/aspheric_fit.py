@@ -317,7 +317,7 @@ def main():
     # fit_method = 4   fit elliptical slopes
     # fit_method = 5   fit elliptical heights using Xianbo method
 
-    fit_method = 5
+    fit_method = 4
 
     if fit_method == 0: # use curve_fit
         popt, pcov = curve_fit(func_aspheric, y0, z0)
@@ -392,7 +392,7 @@ def main():
 
     if fit_method == 3: # ellipse fitting heights
 
-        ibounded = 1 #=0 curve_fit (no guess), 1=leastsq, 2=bounded
+        ibounded = 0 #=0 curve_fit (no guess), 1=leastsq, 2=bounded
 
         print("======== Fitting heights =======")
 
@@ -401,14 +401,14 @@ def main():
             popt, cov_x = curve_fit(func_ellipse, y0, z0, maxfev=10000)
         else:
             #dabam-4 (Amparo)
-            p0 = 98.00
-            q0 = 0.0775
-            theta0 = 3.9e-3
+            # p0 = 98.00
+            # q0 = 0.0775
+            # theta0 = 3.9e-3
             # #
             # #dabam-6 (Soleil) p=499.14 mm q= 4500 mm teta = 34.99 mrad
-            # p0 = 499.14e-3
-            # q0 = 4500e-3
-            # theta0 = 34.99e-3
+            p0 = 499.14e-3
+            q0 = 4500e-3
+            theta0 = 34.99e-3
             # #
             # #dabam-19 #design parameter of ellipse: entrance arm: 420000mm; exit arm: 900mm; angle of incidence 3.052mrad
             # p0 = 420.0
