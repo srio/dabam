@@ -4,7 +4,7 @@
   "X1_FACTOR": 0.001, 
   "Y1_FACTOR": 1e-06, 
   "YEAR_FABRICATION": null, 
-  "SURFACE_SHAPE": "Plane", 
+  "SURFACE_SHAPE": "plane",
   "FUNCTION": null, 
   "LENGTH": 0.115, 
   "WIDTH": 0.040, 

@@ -5,7 +5,7 @@
   "Y1_FACTOR": 1e-06,
   "Y2_FACTOR": 1e-06, 
   "YEAR_FABRICATION": 2009, 
-  "SURFACE_SHAPE": "Elliptical", 
+  "SURFACE_SHAPE": "elliptical",
   "FUNCTION": null, 
   "LENGTH": 0.220, 
   "WIDTH": 0.02, 

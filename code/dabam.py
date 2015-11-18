@@ -66,6 +66,7 @@ class dabam(object):
             'useOrdinatesColumn':1,  # 'Use ordinates column index. '
             'plot':None,             # plot data
             'runTests':False,        # run tests cases
+            'summary':False,         # get summary of DABAM profiles
             }
         #to load profiles:
         self.h           = None # metadata
@@ -122,6 +123,12 @@ class dabam(object):
         self.inputs["plot"] = value
     def set_input_runTests(self,value):
         self.inputs["runTests"] = value
+    def set_input_summary(self,value):
+        self.inputs["summary"] = value
+
+    # a shortcut (frequent usage)
+    def set_entry(self,value):
+        self.inputs["entryNumber"] = value
 
     #others
 
@@ -138,6 +145,9 @@ class dabam(object):
 
         parser.add_argument('-'+self.get_input_value_short_name('runTests'), '--runTests', action='store_true',
             help=self.get_input_value_help('runTests'))
+
+        parser.add_argument('-'+self.get_input_value_short_name('summary'), '--summary', action='store_true',
+            help=self.get_input_value_help('summary'))
 
         # options (flags)
 
@@ -205,6 +215,7 @@ class dabam(object):
         self.set_input_useOrdinatesColumn(args.useHeightsOrSlopes)
         self.set_input_plot(args.plot)
         self.set_input_runTests(args.runTests)
+        self.set_input_summary(args.summary)
 
 
     def set_inputs_from_dictionary(self,dict):
@@ -226,6 +237,7 @@ class dabam(object):
             self.set_input_useOrdinatesColumn ( dict["useOrdinatesColumn"]  )
             self.set_input_plot               ( dict["plot"]                )
             self.set_input_runTests           ( dict["runTests"]            )
+            self.set_input_summary            ( dict["summary"]            )
         except:
             raise Exception("Failed setting dabam input parameters from dictionary")
 
@@ -275,6 +287,7 @@ class dabam(object):
         if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=%d'%self.get_input_value("useOrdinatesColumn")
         if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s cdf_h cdf_s. histo_s histo_h. Default=%s'%repr(self.get_input_value("plot"))
         if key == 'runTests':           return 'Run test cases'
+        if key == 'summary':            return 'gets a summary of all DABAM profiles'
         return ''
 
 
@@ -297,6 +310,7 @@ class dabam(object):
         if key == 'useOrdinatesColumn':  return 'O'
         if key == 'plot':                return 'P'
         if key == 'runTests':            return 'T'
+        if key == 'summary':             return 'Y'
         return '?'
 
     #
@@ -791,7 +805,8 @@ class dabam(object):
             except:
                 raise ImportError("Cannot perform ellipse detrending: please install scipy")
 
-            print("Detrending an ellipse...")
+            if not(self.get_input_value("silent")):
+                print("Detrending an ellipse...")
             if ("ELLIPSE_DESIGN_P" in self.h) and ("ELLIPSE_DESIGN_Q" in self.h) and ("ELLIPSE_DESIGN_THETA" in self.h):
                 ell_p = self.h["ELLIPSE_DESIGN_P"]
                 ell_q = self.h["ELLIPSE_DESIGN_Q"]
@@ -812,18 +827,21 @@ class dabam(object):
                 szOptimized  = fitfunc_ell_slopes(coeffs, sy)
                 sz = sz1 - szOptimized
 
-                print("Ellipse design parameters found in metadata: p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad"%
-                      (ell_p,ell_q,ell_theta,0.0,1e6*(sz1-szGuess).std() ))
-                print("Optimized ellipse                          : p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad\n"%
-                      (coeffs[0],coeffs[1],coeffs[2],coeffs[3],1e6*sz.std() ))
+                if not(self.get_input_value("silent")):
+                    print("Ellipse design parameters found in metadata: p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad"%
+                          (ell_p,ell_q,ell_theta,0.0,1e6*(sz1-szGuess).std() ))
+                    print("Optimized ellipse                          : p=%f m,q=%f m,theta=%f rad, shift=%f nm, Slopes_Std=%f urad\n"%
+                          (coeffs[0],coeffs[1],coeffs[2],coeffs[3],1e6*sz.std() ))
             else:
-                print("Ellipse design parameters NOT FOUND in metadata. Guessing parameters (may be unrealistic!)")
+                if not(self.get_input_value("silent")):
+                    print("Ellipse design parameters NOT FOUND in metadata. Guessing parameters (may be unrealistic!)")
                 coeffs, cov_x = curve_fit(func_ellipse_slopes, sy, sz1, maxfev=10000)
                 szOptimized= func_ellipse_slopes(sy, coeffs[0], coeffs[1], coeffs[2], coeffs[3])
                 sz = sz1 - szOptimized
 
         if polDegree == -4: # ellipse (design)
-            print("Detrending an ellipse...")
+            if not(self.get_input_value("silent")):
+                print("Detrending an ellipse...")
             if ("ELLIPSE_DESIGN_P" in self.h) and ("ELLIPSE_DESIGN_Q" in self.h) and ("ELLIPSE_DESIGN_THETA" in self.h):
                 coeffs = numpy.zeros(4)
                 coeffs[0] = self.h["ELLIPSE_DESIGN_P"]
@@ -965,11 +983,30 @@ class dabam(object):
         to create a line with profile data latex-formatted for automatic compilation of tables in the paper
         :return:
         """
-        return  ('%d & %d & %.2f (%.2f) & %.2f & %.2f (%.2f) & %.2f \\\\'%(self.get_input_value("entryNumber"),
-        int(1e3*(self.sy[-1]-self.sy[0])),
-        1e6*self.sz.std(),   float(-1 if self.h['CALC_SLOPE_RMS'] is None else self.h['CALC_SLOPE_RMS'])  , 1e6*self.stdev_psd_slopes(),
-        1e9*self.zprof.std(),float(-1 if self.h['CALC_HEIGHT_RMS'] is None else self.h['CALC_HEIGHT_RMS']), 1e9*self.stdev_psd_heights(), ))
+        return  ('%d & %s & %d & %.2f  (%.2f %s) & %.2f  (%.2f %s) \\\\'%(   \
+            self.get_input_value("entryNumber"),   \
+            self.h['SURFACE_SHAPE'],
+            int(1e3*(self.sy[-1]-self.sy[0])),   \
+            1e6*self.sz.std(),      \
+            1e6*self.stdev_psd_slopes(),           \
+            ("" if self.h['CALC_SLOPE_RMS'] is None else ",%.2f"%(self.h['CALC_SLOPE_RMS'])),    \
+            1e9*self.stdev_psd_heights(),           \
+            1e9*self.zprof.std(),   \
+            ("" if self.h['CALC_HEIGHT_RMS'] is None else ",%.2f"%(self.h['CALC_HEIGHT_RMS'])),  ))
 
+    def _text_line(self):
+        """
+        to create a line with profile data ascii-formatted for automatic compilation of profile summary
+        :return:
+        """
+        return  ('%3d  %12s %8.2f  %.2f %s %.2f %s'%(   \
+            self.get_input_value("entryNumber"),   \
+            self.h['SURFACE_SHAPE'],
+            int(1e3*(self.sy[-1]-self.sy[0])),   \
+            1e6*self.sz.std(),      \
+            ("       " if self.h['CALC_SLOPE_RMS'] is None else "(%5.2f)"%(self.h['CALC_SLOPE_RMS'])),    \
+            1e9*self.zprof.std(),   \
+            ("       " if self.h['CALC_HEIGHT_RMS'] is None else "(%5.2f)"%(self.h['CALC_HEIGHT_RMS'])),  ))
 
 #
 # main functions
@@ -1173,6 +1210,31 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
         #print ("File "+outFile+" written to disk (for SHADOW).")
 
 
+def dabam_summary(nmax=25,latex=0):
+    """
+    create a text with the summary of all dabam entries
+
+    :param nmax:
+    :param latex:
+    :return:
+    """
+    if latex:
+        txt = ""
+    else:
+        txt = "Entry    shape  Length[mm]  hgt_err [um]  slp_err [urad]\n"
+    for i in range(nmax):
+        dm = dabam()
+        dm.set_input_outputFileRoot("")  # avoid output files
+        dm.set_input_silent(1)
+        dm.set_entry(i+1)
+        dm.load()
+        if latex:
+            txt += dm._latex_line()+"\n"
+        else:
+            txt += dm._text_line()+"\n"
+    return(txt)
+
+
 #
 # tests
 #
@@ -1264,6 +1326,8 @@ def test_dabam_stdev_slopes():
         print("Checking corretness of dabam-entry: %d"%(1+i))
         assert abs(tmp_profile[i] - stdev_ok[i])<1e-10
         assert abs(tmp_psd[i] - stdev_ok[i])<1e-8
+
+
 #
 # main program
 #
@@ -1280,10 +1344,10 @@ def main():
         dm.set_input_outputFileRoot("")      # avoid output files
         test_dabam_names()
         test_dabam_stdev_slopes()
+    elif dm.get_input_value("summary"):
+        print(dabam_summary())
     else:
         dm.load()        # access data
-        #todo: remove
-        print(dm._latex_line())
 
         if dm.get_input_value("plot") != None:
             dm.plot()
