@@ -10,17 +10,14 @@ dabam: (dataBase for metrology)
              cdf (calculate cumulative distribution function)
              psd (calculate power spectral density)
              write_shadowSurface (writes file with a mesh for SHADOW)
-             func_ellipse_slopes
-             func_ellipse
-             func_ellipse_slopes_amparo
-             func_ellipse_amparo
-             write_shadowSurface
+             func_ellipse_slopes evaluates the ellipse slopes profile equation
 
  
        MODIFICATION HISTORY:
            20130902 srio@esrf.eu, written
            20131109 srio@esrf.eu, added command line arguments, access metadata
            20151103 srio@esrf.eu, restructured to OO
+           20151118 srio@esrf.eu, rcleanied and tested
 
 """
 
@@ -42,8 +39,6 @@ try:
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
-
-
 
 
 class dabam(object):
@@ -214,24 +209,6 @@ class dabam(object):
 
     def set_inputs_from_dictionary(self,dict):
         try:
-            # self.inputs["entryNumber"]        =  dict["entryNumber"]
-            # self.inputs["silent"]             =  dict["silent"]
-            # self.inputs["localFileRoot"]      =  dict["localFileRoot"]
-            # self.inputs["outputFileRoot"]     =  dict["outputFileRoot"]
-            # self.inputs["setDetrending"]      =  dict["setDetrending"]
-            # self.inputs["nbinS"]               =  dict["nbinS"]
-            # self.inputs["nbinH"]               =  dict["nbinH"]
-            # self.inputs["shadowCalc"]         =  dict["shadowCalc"]
-            # self.inputs["shadowNy"]           =  dict["shadowNy"]
-            # self.inputs["shadowNx"]           =  dict["shadowNx"]
-            # self.inputs["shadowWidth"]        =  dict["shadowWidth"]
-            # self.inputs["multiply"]           =  dict["multiply"]
-            # self.inputs["useHeightsOrSlopes"] =  dict["useHeightsOrSlopes"]
-            # self.inputs["useAbscissasColumn"] =  dict["useAbscissasColumn"]
-            # self.inputs["useOrdinatesColumn"] =  dict["useOrdinatesColumn"]
-            # self.inputs["plot"]               =  dict["plot"]
-            # self.inputs["runTests"]           =  dict["runTests"]
-
             self.set_input_entryNumber        ( dict["entryNumber"]         )
             self.set_input_silent             ( dict["silent"]              )
             self.set_input_localFileRoot      ( dict["localFileRoot"]       )
@@ -320,9 +297,7 @@ class dabam(object):
         if key == 'useOrdinatesColumn':  return 'O'
         if key == 'plot':                return 'P'
         if key == 'runTests':            return 'T'
-
         return '?'
-
 
     #
     # file names
@@ -333,11 +308,6 @@ class dabam(object):
     def file_data(self):
         return self._file_root()+'.dat'
 
-
-
-
-
-
     #
     # load profile and store data. This is the main action!!
     #
@@ -345,7 +315,6 @@ class dabam(object):
     def load(self):
 
         # load data and metadata
-
         self._load_file_metadata()
         self._load_file_data()
 
@@ -410,7 +379,7 @@ class dabam(object):
             if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk.")
 
-        # heights histogrtam
+        # heights histogram
         if self.get_input_value("outputFileRoot") != "":
             dd=numpy.concatenate( (self.histoHeights["x"],self.histoHeights["y1"],self.histoHeights["y2"] ) ,axis=0).reshape(3,-1).transpose()
             outFile = self.get_input_value("outputFileRoot")+'HistoHeights.dat'
@@ -458,7 +427,6 @@ class dabam(object):
         return self.h['CALC_SLOPE_RMS']
 
     def stdev_summary(self):
-
         txt = ""
         txt += 'Slope error s_StDev:           %.3f urad\n'       %( 1e6*self.stdev_profile_slopes() )
         txt += '         from PSD:             %.3f urad\n'       %( 1e6*self.stdev_psd_slopes() )
@@ -468,91 +436,7 @@ class dabam(object):
         txt += '         from USER (metadata): %s nm\n'          %(self.stdev_user_heights() )
         txt += 'PV of height profile (before detrend): %.3f nm\n' %(1e9*(self.zprof1.max() - self.zprof1.min() ))
         txt += 'PV of height profile (after detrend):  %.3f nm\n' %(1e9*(self.zprof.max() - self.zprof.min() ))
-
         return txt
-
-
-
-
-    def _calc_histograms(self):
-        """
-        Calculates slopes and heights histograms and also the Gaussians with their StDev
-
-        results are stored in:
-        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
-
-        where:
-          x is the abscissas (at bin center), y1 is the histogram, y2 is the Gaussian
-          x_path is the abscissas with points at left and riggh edges of each bin, y1_path is the
-        :return:
-        """
-
-        #
-        # slopes histogram
-        #
-
-        # binsize = float(self.get_input_value("binS")) # default is 1e-7 rads
-        # bins = numpy.ceil( (self.sz.max()-self.sz.min())/binsize )
-
-        bins = int(self.get_input_value("nbinS"))
-        hz,hy_left = numpy.histogram(self.sz, bins = bins)
-
-
-        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
-        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
-
-        hy_path = []
-        hz_path = []
-        for s,t,v in zip(hy_left,hy_right,hz):
-            hy_path.append(s)
-            hz_path.append(v)
-            hy_path.append(t)
-            hz_path.append(v)
-
-        hy_path = numpy.array(hy_path)
-        hz_path = numpy.array(hz_path)
-
-        #Gaussian with StDev of data
-        g = numpy.exp( -numpy.power(hy_center-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
-        g = g/g.sum()*hz.sum()
-
-        g_path = numpy.exp( -numpy.power(hy_path-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
-        g_path = g_path/g_path.sum()*hz_path.sum()
-
-
-        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
-
-        #
-        # heights histogram
-        #
-
-        # binsize = float(self.get_input_value("binH"))
-        # bins = numpy.ceil( (self.zprof.max()-self.zprof.min())/binsize )
-        bins = int(self.get_input_value("nbinH"))
-        hz,hy_left = numpy.histogram(self.zprof, bins = bins)
-
-        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
-        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
-
-        hy_path = []
-        hz_path = []
-        for s,t,v in zip(hy_left,hy_right,hz):
-            hy_path.append(s)
-            hz_path.append(v)
-            hy_path.append(t)
-            hz_path.append(v)
-
-        hy_path = numpy.array(hy_path)
-        hz_path = numpy.array(hz_path)
-
-        #Gaussian with StDev of data
-        g = numpy.exp( -numpy.power(hy_center-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
-        g = g/g.sum()*hz.sum()
-
-        g_path = numpy.exp( -numpy.power(hy_path-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
-        g_path = g_path/g_path.sum()*hz_path.sum()
-
-        self.histoHeights = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
 
     #
     # write things
@@ -662,18 +546,6 @@ class dabam(object):
         txt += self.stdev_summary()
 
         txt += '----------------------------------------------------\n'
-        # if (args.calcBoundaries == True):
-        #     print ('Diffraction/reflection boundary zones: ')
-        #     print ('   diffraction if h < h_cut, reflection if h > h_cut: ')
-        #     print ('   at wavelength [A]: ')+repr(wavelength*1e10)
-        #     print ('   at grazing angle [mrad]: ')+repr(theta*1e3)
-        #     print ('   ')
-        #     print ('   height cut h_cut [nm]: '+repr(  h_cut*1e9 ))
-        #     print ('   h_cut/h_RMS: '+repr(  h_cut_normalized ))
-        #     print ('   frequency cut f_cut [m^-1]: '+repr(  f_cut ))
-        #     print ('   length 1/f_cut [mm]: '+repr(  1.0/f_cut ))
-
-
         return txt
 
 
@@ -1007,6 +879,87 @@ class dabam(object):
         self.cdfSlopes = cdfSlopes
 
 
+    def _calc_histograms(self):
+        """
+        Calculates slopes and heights histograms and also the Gaussians with their StDev
+
+        results are stored in:
+        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
+
+        where:
+          x is the abscissas (at bin center), y1 is the histogram, y2 is the Gaussian
+          x_path is the abscissas with points at left and riggh edges of each bin, y1_path is the
+        :return:
+        """
+
+        #
+        # slopes histogram
+        #
+
+        # binsize = float(self.get_input_value("binS")) # default is 1e-7 rads
+        # bins = numpy.ceil( (self.sz.max()-self.sz.min())/binsize )
+
+        bins = int(self.get_input_value("nbinS"))
+        hz,hy_left = numpy.histogram(self.sz, bins = bins)
+
+
+        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
+        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
+
+        hy_path = []
+        hz_path = []
+        for s,t,v in zip(hy_left,hy_right,hz):
+            hy_path.append(s)
+            hz_path.append(v)
+            hy_path.append(t)
+            hz_path.append(v)
+
+        hy_path = numpy.array(hy_path)
+        hz_path = numpy.array(hz_path)
+
+        #Gaussian with StDev of data
+        g = numpy.exp( -numpy.power(hy_center-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
+        g = g/g.sum()*hz.sum()
+
+        g_path = numpy.exp( -numpy.power(hy_path-self.sz.mean(),2)/2/numpy.power(self.stdev_profile_slopes(),2) )
+        g_path = g_path/g_path.sum()*hz_path.sum()
+
+
+        self.histoSlopes = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
+
+        #
+        # heights histogram
+        #
+
+        # binsize = float(self.get_input_value("binH"))
+        # bins = numpy.ceil( (self.zprof.max()-self.zprof.min())/binsize )
+        bins = int(self.get_input_value("nbinH"))
+        hz,hy_left = numpy.histogram(self.zprof, bins = bins)
+
+        hy_center = hy_left[0:-1]+0.5*(hy_left[1]-hy_left[0]) #calculate positions of the center of the bins
+        hy_right  = hy_left[0:-1]+1.0*(hy_left[1]-hy_left[0]) #calculate positions of the right edge of the bins
+
+        hy_path = []
+        hz_path = []
+        for s,t,v in zip(hy_left,hy_right,hz):
+            hy_path.append(s)
+            hz_path.append(v)
+            hy_path.append(t)
+            hz_path.append(v)
+
+        hy_path = numpy.array(hy_path)
+        hz_path = numpy.array(hz_path)
+
+        #Gaussian with StDev of data
+        g = numpy.exp( -numpy.power(hy_center-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
+        g = g/g.sum()*hz.sum()
+
+        g_path = numpy.exp( -numpy.power(hy_path-self.zprof.mean(),2)/2/numpy.power(self.stdev_profile_heights(),2) )
+        g_path = g_path/g_path.sum()*hz_path.sum()
+
+        self.histoHeights = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
+
+
     def _latex_line(self):
         """
         to create a line with profile data latex-formatted for automatic compilation of tables in the paper
@@ -1113,8 +1066,6 @@ def psd(xx, yy, onlyrange = None):
 
 
 #
-# todo: reorganise this into class methods
-#
 def func_ellipse_slopes(x, p, q, theta, shift):
 
 
@@ -1122,9 +1073,7 @@ def func_ellipse_slopes(x, p, q, theta, shift):
 
     b = numpy.sqrt( numpy.abs(p * q)) * numpy.sin(theta)
 
-
     c = numpy.sqrt(numpy.abs(a*a - b*b))
-
 
     epsilon = c / a
 
@@ -1291,10 +1240,8 @@ def test_dabam_stdev_slopes():
     """
 
     print("-------------------  test_dabam_slopes ------------------------------")
-    stdev_profile_ok = [4.8651846141972904e-07, 1.5096270252538352e-07, 1.7394444580303415e-07, 1.3428739185534941e-07, 8.4197811681221573e-07, 1.0097219914863226e-06, 5.74153915948042e-07, 5.7147678897188605e-07, 4.3527688789008779e-07, 2.3241765005153794e-07]
-    stdev_psd_ok = [2.4724035615909884e-08, 2.4405427348911064e-09, 8.122795547837512e-10, 1.4019943864619925e-10, 1.6826933750035566e-08, 2.0711769898782215e-09, 3.2138903485739521e-10, 2.5457246098948428e-09, 1.9318084893422374e-09, 3.3646805118574403e-09]
-
-    nmax = 10
+    stdev_ok = [4.8651846141972904e-07, 1.5096270252538352e-07, 1.7394444580303415e-07, 1.3427931903345248e-07, 8.4197811681221573e-07, 1.0097219914737401e-06, 5.74153915948042e-07, 5.7147678897188605e-07, 4.3527688789008779e-07, 2.3246622157010269e-07, 2.2875135244814614e-07, 3.1814252518419135e-07, 7.0257218962589665e-07, 1.038380187901705e-06, 2.1299190697015827e-06, 1.8430245562603717e-06, 2.270750014732601e-06, 1.1878208663183125e-07, 4.1777346923623561e-08, 4.0304426129060434e-07, 4.3430016136041185e-07, 5.3156037926371151e-06, 1.7725086287871762e-07, 2.0222947541222619e-07, 7.2140041229621698e-08]
+    nmax = 25
 
     tmp_profile = []
     tmp_psd = []
@@ -1310,17 +1257,15 @@ def test_dabam_stdev_slopes():
         tmp_psd.append(stdev_psd)
 
     print("stdev from profile:          ",repr(tmp_profile))
-    print("stdev OK (stored) profile:   ",repr(stdev_profile_ok))
     print("stdev from psd:              ",repr(tmp_psd))
-    print("stdev OK (stored)psd:        ",repr(stdev_psd_ok))
+    print("stdev OK (stored):           ",repr(stdev_ok))
 
     for i in range(nmax):
-        assert abs(tmp_profile[i] - stdev_profile_ok[i])<1e-10
-        assert abs(tmp_psd[i] - stdev_psd_ok[i])<1e-11
-
-
+        print("Checking corretness of dabam-entry: %d"%(1+i))
+        assert abs(tmp_profile[i] - stdev_ok[i])<1e-10
+        assert abs(tmp_psd[i] - stdev_ok[i])<1e-8
 #
-#
+# main program
 #
 def main():
 
@@ -1340,14 +1285,11 @@ def main():
         #todo: remove
         print(dm._latex_line())
 
-
-
-
         if dm.get_input_value("plot") != None:
             dm.plot()
 
 #
-# main program
+# main call
 #
 if __name__ == '__main__':
     main()
