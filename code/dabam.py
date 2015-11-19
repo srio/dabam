@@ -212,7 +212,7 @@ class dabam(object):
         self.set_input_multiply(args.multiply)
         self.set_input_useHeightsOrSlopes(args.useHeightsOrSlopes)
         self.set_input_useAbscissasColumn(args.useAbscissasColumn)
-        self.set_input_useOrdinatesColumn(args.useHeightsOrSlopes)
+        self.set_input_useOrdinatesColumn(args.useOrdinatesColumn)
         self.set_input_plot(args.plot)
         self.set_input_runTests(args.runTests)
         self.set_input_summary(args.summary)
@@ -435,21 +435,35 @@ class dabam(object):
         return self.cdfSlopes[-1]
 
     def stdev_user_heights(self):
-        return self.h['CALC_HEIGHT_RMS']
+        if self.h['CALC_HEIGHT_RMS'] != None:
+            if self.h['CALC_HEIGHT_RMS_FACTOR'] != None:
+                return float(self.h['CALC_HEIGHT_RMS']) * float(self.h['CALC_HEIGHT_RMS_FACTOR'])
+            else:
+                return float(self.h['CALC_HEIGHT_RMS'])
 
     def stdev_user_slopes(self):
-        return self.h['CALC_SLOPE_RMS']
+       if self.h['CALC_SLOPE_RMS'] != None:
+            if self.h['CALC_SLOPE_RMS_FACTOR'] != None:
+                return float(self.h['CALC_SLOPE_RMS']) * float(self.h['CALC_SLOPE_RMS_FACTOR'])
+            else:
+                return float(self.h['CALC_SLOPE_RMS'])
 
     def stdev_summary(self):
         txt = ""
-        txt += 'Slope error s_StDev:           %.3f urad\n'       %( 1e6*self.stdev_profile_slopes() )
-        txt += '         from PSD:             %.3f urad\n'       %( 1e6*self.stdev_psd_slopes() )
-        txt += '         from USER (metadata): %s urad\n'         %(self.stdev_user_slopes())
-        txt += 'Shape error h_StDev:           %.3f nm\n'        %(1e9*self.stdev_profile_heights() )
-        txt += '         from PSD:             %.3f nm\n'        %(1e9*self.stdev_psd_heights() )
-        txt += '         from USER (metadata): %s nm\n'          %(self.stdev_user_heights() )
-        txt += 'PV of height profile (before detrend): %.3f nm\n' %(1e9*(self.zprof1.max() - self.zprof1.min() ))
-        txt += 'PV of height profile (after detrend):  %.3f nm\n' %(1e9*(self.zprof.max() - self.zprof.min() ))
+        txt += 'Slope error:\n'
+        txt += '         StDev of slopes profile:    %.3f urad\n' %( 1e6*self.stdev_profile_slopes() )
+        txt += '         from PSD:                   %.3f urad\n' %( 1e6*self.stdev_psd_slopes())
+        if self.stdev_user_slopes() != None:
+            txt += '         from USER (metadata):       %.3f urad\n'   %(1e6*self.stdev_user_slopes())
+        txt += '         Peak-to-valley: no detrend: %.3f urad\n'   %(1e6*(self.sz1.max() - self.sz1.min()))
+        txt += '                       with detrend: %.3f urad\n'   %(1e6*(self.sz.max() - self.sz.min() ))
+        txt += 'Height error: \n'
+        txt += '         StDev of heights profile:   %.3f nm\n'   %(1e9*self.stdev_profile_heights() )
+        txt += '         from PSD:                   %.3f nm\n'   %(1e9*self.stdev_psd_heights() )
+        if self.stdev_user_heights() != None:
+            txt += '         from USER (metadata):       %.3f nm\n'   %(1e9*self.stdev_user_heights())
+        txt += '         Peak-to-valley: no detrend: %.3f nm\n'   %(1e9*(self.zprof1.max() - self.zprof1.min()))
+        txt += '                       with detrend: %.3f nm\n'   %(1e9*(self.zprof.max() - self.zprof.min() ))
         return txt
 
     #
@@ -534,7 +548,7 @@ class dabam(object):
         txt += 'Scan length: %.3f mm\n'%(1e3*(self.sy[-1]-self.sy[0]))
         txt += 'Number of points: %d\n'%(len(self.sy))
 
-        txt += '   '
+        txt += '\n'
 
         if polDegree >= 0:
             if polDegree == 1:
@@ -737,22 +751,19 @@ class dabam(object):
         col_abscissas = int( self.get_input_value("useAbscissasColumn") )
         col_ordinates = int( self.get_input_value("useOrdinatesColumn") )
 
-
         col_ordinates_title = 'unknown'
-        if int(self.get_input_value("useHeightsOrSlopes")) == -1:  #default, read from file
-            if self.h['FILE_FORMAT'] == 1:  # slopes in Col2
-                col_ordinates = 1
-                col_ordinates_title = 'slopes'
-            if self.h['FILE_FORMAT'] == 2:  # heights in Col2
-                col_ordinates = 2
-                col_ordinates_title = 'heights'
-            if self.h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
-                col_ordinates = 1
-                col_ordinates_title = 'slopes'
-            if self.h['FILE_FORMAT'] == 4:  # heights in Col2, file X1 Y1 X2 Y2
-                col_ordinates = 2
-                col_ordinates_title = 'heights'
-        else:
+        if self.h['FILE_FORMAT'] == 1:  # slopes in Col2
+            col_ordinates_title = 'slopes'
+        if self.h['FILE_FORMAT'] == 2:  # heights in Col2
+            col_ordinates_title = 'heights'
+        if self.h['FILE_FORMAT'] == 3:  # slopes in Col2, file X1 Y1 X2 Y2
+            col_ordinates_title = 'slopes'
+        if self.h['FILE_FORMAT'] == 4:  # heights in Col2, file X1 Y1 X2 Y2
+            col_ordinates_title = 'heights'
+
+        if int(self.get_input_value("useHeightsOrSlopes")) == -1:  #default, keep current
+            pass
+        else: # overwrite
             if int(self.get_input_value("useHeightsOrSlopes")) == 0:
                 col_ordinates_title = 'heights'
             if int(self.get_input_value("useHeightsOrSlopes")) == 1:
@@ -1302,7 +1313,8 @@ def test_dabam_stdev_slopes():
     """
 
     print("-------------------  test_dabam_slopes ------------------------------")
-    stdev_ok = [4.8651846141972904e-07, 1.5096270252538352e-07, 1.7394444580303415e-07, 1.3427931903345248e-07, 8.4197811681221573e-07, 1.0097219914737401e-06, 5.74153915948042e-07, 5.7147678897188605e-07, 4.3527688789008779e-07, 2.3246622157010269e-07, 2.2875135244814614e-07, 3.1814252518419135e-07, 7.0257218962589665e-07, 1.038380187901705e-06, 2.1299190697015827e-06, 1.8430245562603717e-06, 2.270750014732601e-06, 1.1878208663183125e-07, 4.1777346923623561e-08, 4.0304426129060434e-07, 4.3430016136041185e-07, 5.3156037926371151e-06, 1.7725086287871762e-07, 2.0222947541222619e-07, 7.2140041229621698e-08]
+    stdev_ok =  [4.8651846141972904e-07, 1.5096270252538352e-07, 1.7394444580303415e-07, 1.3427931903345248e-07, 8.4197811681221573e-07, 1.0097219914737401e-06, 5.74153915948042e-07, 5.7147678897188605e-07, 4.3527688789008779e-07, 2.3241765005153794e-07, 2.2883095949050537e-07, 3.1848792295534762e-07, 1.2899449478710491e-06, 1.1432193606225235e-06, 2.1297554130432642e-06, 1.8447156600570902e-06, 2.2715775271373941e-06, 1.1878208663183125e-07, 4.1777346923623561e-08, 4.0304426129060434e-07, 4.3430016136041185e-07, 5.3156037926371151e-06, 1.7725086287871762e-07, 2.0222947541222619e-07, 7.2140041229621698e-08]
+
     nmax = 25
 
     tmp_profile = []
@@ -1323,8 +1335,9 @@ def test_dabam_stdev_slopes():
     print("stdev OK (stored):           ",repr(stdev_ok))
 
     for i in range(nmax):
-        print("Checking corretness of dabam-entry: %d"%(1+i))
-        assert abs(tmp_profile[i] - stdev_ok[i])<1e-10
+        print("Checking correctness of dabam-entry: %d"%(1+i))
+        print("    Check slopes profile urad:  StDev=%f, FromPSD=%f, stored=%f "%(1e6*tmp_profile[i],1e6*tmp_psd[i],1e6*stdev_ok[i]))
+        assert abs(tmp_profile[i] - stdev_ok[i])<1e-9
         assert abs(tmp_psd[i] - stdev_ok[i])<1e-8
 
 
