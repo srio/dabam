@@ -7,7 +7,7 @@ dabam: (dataBase for metrology)
        classes:
              dabam
        main functions:
-             cdf (calculate cumulative distribution function)
+             cdf (calculate antiderivative function)
              psd (calculate power spectral density)
              write_shadowSurface (writes file with a mesh for SHADOW)
              func_ellipse_slopes evaluates the ellipse slopes profile equation
@@ -69,20 +69,25 @@ class dabam(object):
             'summary':False,         # get summary of DABAM profiles
             }
         #to load profiles:
-        self.h           = None # metadata
-        self.a           = None # raw datafile
-        self.sy          = None # abscissa along the mirror
-        self.sz1         = None # undetrended slope profile
-        self.sz          = None # detrended slope profile
-        self.zprof1      = None # undetrended heights profile
-        self.zprof       = None # detrended heights profile
-        self.coeffs      = None # information on detrending (polynomial coeffs)
-        self.f           = None # frequency of Power Spectral Density
-        self.psdHeights  = None # Power Spectral Density of Heights profile
-        self.psdSlopes   = None # Power Spectral Density of slopes profile
-        self.cdfHeights  = None # PDF integral of Heights profile
-        self.cdfSlopes   = None # PDF integral of Slopes profile
-        self.histoSlopes = None # to store histogram
+        self.h             = None # metadata
+        self.a             = None # raw datafile
+        self.sy            = None # abscissa along the mirror
+        self.sz1           = None # undetrended slope profile
+        self.sz            = None # detrended slope profile
+        self.zprof1        = None # undetrended heights profile
+        self.zprof         = None # detrended heights profile
+        self.coeffs        = None # information on detrending (polynomial coeffs)
+        self.f             = None # frequency of Power Spectral Density
+        self.psdHeights    = None # Power Spectral Density of Heights profile
+        self.psdSlopes     = None # Power Spectral Density of slopes profile
+        self.adpsdHeights  = None # Antiderivative of PDF of Heights profile
+        self.adpsdSlopes   = None # Antiderivative of PDF of Slopes profile
+        self.histoSlopes   = None # to store slopes histogram
+        self.histoHeights  = None # to store heights histogram
+        self.momentsSlopes = None # to store moments of the slopes profile
+        self.momentsHeights = None # to store moments of the heights profile
+        self.powerlay      = None  # to store a dictionary with the results of fitting the PSDs
+        self.powerlay      = None  # to store a dictionary with the results of fitting the PSDs
 
     #
     #setters
@@ -285,7 +290,7 @@ class dabam(object):
         if key == 'useHeightsOrSlopes': return 'Force calculations using profile heights (0) or slopes (1). If -1, used metadata keyword FILE_FORMAT. Default=%d'%self.get_input_value("useHeightsOrSlopes")
         if key == 'useAbscissasColumn': return 'Use abscissas column index. Default=%d'%self.get_input_value("useAbscissasColumn")
         if key == 'useOrdinatesColumn': return 'Use ordinates column index. Default=%d'%self.get_input_value("useOrdinatesColumn")
-        if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s cdf_h cdf_s. histo_s histo_h. Default=%s'%repr(self.get_input_value("plot"))
+        if key == 'plot':               return 'Plot: all heights slopes psd_h psd_s lambda_h lambda_s. histo_s histo_h. Default=%s'%repr(self.get_input_value("plot"))
         if key == 'runTests':           return 'Run test cases'
         if key == 'summary':            return 'gets a summary of all DABAM profiles'
         return ''
@@ -346,6 +351,10 @@ class dabam(object):
         #calculate histograms
         self._calc_histograms()
 
+        #calculate moments
+        self.momentsHeights = moment(self.zprof)
+        self.momentsSlopes = moment(self.sz)
+
         #
         # write files
         #
@@ -376,9 +385,12 @@ class dabam(object):
 
         #write psd file
         if self.get_input_value("outputFileRoot") != "":
-            dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, self.cdfHeights, self.cdfSlopes ) ,axis=0).reshape(5,-1).transpose()
+            dd = numpy.concatenate( (self.f, self.psdHeights, self.psdSlopes, \
+                                     numpy.sqrt(self.adpsdHeights)/self.stdev_psd_heights(), \
+                                     numpy.sqrt(self.adpsdSlopes)/self.stdev_psd_slopes() \
+                                     ) ,axis=0).reshape(5,-1).transpose()
             outFile = self.get_input_value("outputFileRoot")+'PSD.dat'
-            header = "F %s\nS 1  power spectral density\nN 5\nL  freq[m^-1]  psd_heights[m^3]  psd_slopes[rad^3]  cdf(psd_h)  cdf(psd_s)"%(outFile)
+            header = "F %s\nS 1  power spectral density\nN 5\nL  freq[m^-1]  psd_heights[m^3]  psd_slopes[rad^3]  lambda(psd_h)  lambda(psd_s)"%(outFile)
             numpy.savetxt(outFile,dd,comments="#",header=header)
             if not(self.get_input_value("silent")):
                 print ("File "+outFile+" written to disk.")
@@ -429,10 +441,10 @@ class dabam(object):
         return self.sz.std()
 
     def stdev_psd_heights(self):
-        return self.cdfHeights[-1]
+        return numpy.sqrt(self.adpsdHeights[-1])
 
     def stdev_psd_slopes(self):
-        return self.cdfSlopes[-1]
+        return numpy.sqrt(self.adpsdSlopes[-1])
 
     def stdev_user_heights(self):
         if self.h['CALC_HEIGHT_RMS'] != None:
@@ -450,21 +462,34 @@ class dabam(object):
 
     def stdev_summary(self):
         txt = ""
-        txt += 'Slope error:\n'
+        txt += 'Slopes profile:\n'
         txt += '         StDev of slopes profile:    %.3f urad\n' %( 1e6*self.stdev_profile_slopes() )
         txt += '         from PSD:                   %.3f urad\n' %( 1e6*self.stdev_psd_slopes())
         if self.stdev_user_slopes() != None:
             txt += '         from USER (metadata):       %.3f urad\n'   %(1e6*self.stdev_user_slopes())
         txt += '         Peak-to-valley: no detrend: %.3f urad\n'   %(1e6*(self.sz1.max() - self.sz1.min()))
         txt += '                       with detrend: %.3f urad\n'   %(1e6*(self.sz.max() - self.sz.min() ))
-        txt += 'Height error: \n'
+        txt += '         Skewness: %.3f, Kurtosis: %.3f\n'   %(self.momentsSlopes[2],self.momentsSlopes[3])
+        beta = -self.powerlaw["hgt_pendent"]
+        txt += '         PSD power law fit: beta:%.3f, Df: %.3f\n'   %(beta,(5-beta)/2)
+
+        txt += 'Heights profile: \n'
         txt += '         StDev of heights profile:   %.3f nm\n'   %(1e9*self.stdev_profile_heights() )
         txt += '         from PSD:                   %.3f nm\n'   %(1e9*self.stdev_psd_heights() )
         if self.stdev_user_heights() != None:
             txt += '         from USER (metadata):       %.3f nm\n'   %(1e9*self.stdev_user_heights())
         txt += '         Peak-to-valley: no detrend: %.3f nm\n'   %(1e9*(self.zprof1.max() - self.zprof1.min()))
         txt += '                       with detrend: %.3f nm\n'   %(1e9*(self.zprof.max() - self.zprof.min() ))
+        txt += '         Skewness: %.3f, Kurtosis: %.3f\n'   %(self.momentsHeights[2],self.momentsHeights[3])
+        beta = -self.powerlaw["slp_pendent"]
+        txt += '         PSD power law fit: beta:%.3f, Df: %.3f\n'   %(beta,(5-beta)/2)
         return txt
+
+    def lambda_heights(self):
+        return numpy.sqrt(self.adpsdHeights)/self.stdev_psd_heights()
+
+    def lambda_slopes(self):
+        return numpy.sqrt(self.adpsdSlopes)/self.stdev_psd_slopes()
 
     #
     # write things
@@ -587,7 +612,7 @@ class dabam(object):
         what = self.get_input_value("plot")
 
         if what == "all":
-            what = ["heights","slopes","psd_h","psd_s","cdf_h","cdf_s","histo_s","histo_h"]
+            what = ["heights","slopes","psd_h","psd_s","lambda_h","lambda_s","histo_s","histo_h"]
         else:
             what = what.split(" ")
 
@@ -608,27 +633,31 @@ class dabam(object):
             elif (iwhat == "psd_h"):
                 f3 = plt.figure(3)
                 plt.loglog(self.f,self.psdHeights)
-                plt.title("PSD of heights profile")
+                plt.loglog(self.f,self.f**(self.powerlaw["hgt_pendent"])*10**self.powerlaw["hgt_shift"])
+                beta = -self.powerlaw["hgt_pendent"]
+                plt.title("PSD of heights profile (beta=%.2f,Df=%.2f)"%(beta,(5-beta)/2))
                 plt.xlabel("f [m^-1]")
                 plt.ylabel("PSD [m^3]")
             elif (iwhat == "psd_s"):
                 f4 = plt.figure(4)
                 plt.loglog(self.f,self.psdSlopes)
-                plt.title("PSD of slopes profile")
+                plt.loglog(self.f,self.f**(self.powerlaw["slp_pendent"])*10**self.powerlaw["slp_shift"])
+                beta = -self.powerlaw["slp_pendent"]
+                plt.title("PSD of slopes profile (beta=%.2f,Df=%.2f)"%(beta,(5-beta)/2))
                 plt.xlabel("f [m^-1]")
                 plt.ylabel("PSD [rad^3]")
-            elif (iwhat == "cdf_h"):
+            elif (iwhat == "lambda_h"):
                 f5 = plt.figure(5)
-                plt.semilogx(self.f,self.cdfHeights)
-                plt.title("sqrt(Antiderivative(PDF_s)) ~ StDev of heights profile")
+                plt.semilogx(self.f,self.lambda_heights())
+                plt.title("sqrt(Antiderivative(PDF_s))/StDev of heights profile")
                 plt.xlabel("f [m^-1]")
-                plt.ylabel("heights StDev")
-            elif (iwhat == "cdf_s"):
+                plt.ylabel("lambda_h")
+            elif (iwhat == "lambda_s"):
                 f6 = plt.figure(6)
-                plt.semilogx(self.f,self.cdfSlopes)
-                plt.title("sqrt(Antiderivatice(PDF_h)) ~ StDev of slopes profile")
+                plt.semilogx(self.f,self.lambda_slopes())
+                plt.title("sqrt(Antiderivative(PDF_h))/StDev of slopes profile")
                 plt.xlabel("f [m^-1]")
-                plt.ylabel("slopes StDev")
+                plt.ylabel("lambda_s")
             elif (iwhat == "histo_s" ):
                 f7 = plt.figure(7)
                 plt.plot(1e6*self.histoSlopes["x_path"],self.histoSlopes["y1_path"])
@@ -644,7 +673,7 @@ class dabam(object):
                 plt.xlabel("Z [nm]")
                 plt.ylabel("counts")
             else:
-                print("Plotting options are: heights slopes psd_h psd_s cdf_h cdf_s")
+                print("Plotting options are: heights slopes psd_h psd_s lambda_h lambda_s")
                 return None
         plt.show()
 
@@ -883,29 +912,60 @@ class dabam(object):
 
     def _calc_psd(self):
         sy    = self.sy
-        sz1    = self.sz1
+        #sz1    = self.sz1
         sz    = self.sz
-        zprof1    = self.zprof1
+        #zprof1    = self.zprof1
         zprof     = self.zprof
 
         #;
-        #; calculate PSD on both profile and slope, and also then their cdf()
+        #; calculate PSD on both profile and slope, and also then their antiderivative
         #;
         psdHeights,f = psd(sy,zprof,onlyrange=None)
         psdSlopes,f = psd(sy,sz,onlyrange=None)
-        cdfHeights = numpy.sqrt(cdf(f,psdHeights))
-        #cdfHeightsStDev = cdfHeights.max()
-        #cdfHeights = 1.0 - cdfHeights/cdfHeightsStDev
-        cdfSlopes = numpy.sqrt(cdf(f,psdSlopes))
-        #cdfSlopesStDev = cdfSlopes.max()
-        #cdfSlopes = 1.0 - cdfSlopes/cdfSlopesStDev
+        adpsdHeights = cdf(f,psdHeights)
+        adpsdSlopes  = cdf(f,psdSlopes)
+
 
 
         self.f = f
-        self.psdHeights = psdHeights
-        self.psdSlopes = psdSlopes
-        self.cdfHeights = cdfHeights
-        self.cdfSlopes = cdfSlopes
+        self.psdHeights   = psdHeights
+        self.psdSlopes    = psdSlopes
+        self.adpsdHeights = adpsdHeights
+        self.adpsdSlopes  = adpsdSlopes
+
+        #fit PSD to a power law
+        x = numpy.log10(self.f)
+        y_h = numpy.log10(self.psdHeights)
+        y_s = numpy.log10(self.psdSlopes)
+        #select the fitting area (80% of the full interval, centered)
+        c1 = (x < (x.max()-0.1*(x.max()-x.min())) )
+        c2 = (x > (x.min()+0.1*(x.max()-x.min())) )
+        igood = numpy.where(c1 & c2)
+        igood = numpy.array(igood)
+        igood.shape = -1
+
+        coeffs_h = numpy.polyfit(x[igood], y_h[igood], 1)
+        coeffs_s = numpy.polyfit(x[igood], y_s[igood], 1)
+
+        # #plot
+        # from matplotlib import pylab as plt
+        # f1 = plt.figure(1)
+        # plt.plot(x,y_h)
+        # plt.plot(x[igood],coeffs_h[0]*x[igood]+coeffs_h[1])
+        # plt.title("TEST")
+        # plt.xlabel("log10(f)")
+        # plt.ylabel("log10(PSD)")
+        #
+        # f1 = plt.figure(2)
+        # plt.loglog(self.f,self.psdHeights)
+        # plt.loglog(self.f,self.f**(coeffs_h[0])*10**coeffs_h[1])
+        # plt.title("????????????????????????????")
+        # plt.xlabel("f [m^-1]")
+        # plt.ylabel("PSD")
+
+        self.powerlaw = {"hgt_pendent":coeffs_h[0], "hgt_shift":coeffs_h[1], \
+                         "slp_pendent":coeffs_s[0], "slp_shift":coeffs_s[1],\
+                         "index_from":igood[0],"index_to":igood[-1]}
 
 
     def _calc_histograms(self):
@@ -989,21 +1049,30 @@ class dabam(object):
         self.histoHeights = {"x":hy_center, "y1":hz, "y2":g, "x_path":hy_path, "y1_path":hz_path, "y2_path":g_path}
 
 
-    def _latex_line(self):
+    def _latex_line(self,table_number=1):
         """
         to create a line with profile data latex-formatted for automatic compilation of tables in the paper
         :return:
         """
-        return  ('%d & %s & %d & %.2f  (%.2f %s) & %.2f  (%.2f %s) \\\\'%(   \
-            self.get_input_value("entryNumber"),   \
-            self.h['SURFACE_SHAPE'],
-            int(1e3*(self.sy[-1]-self.sy[0])),   \
-            1e6*self.sz.std(),      \
-            1e6*self.stdev_psd_slopes(),           \
-            ("" if self.h['CALC_SLOPE_RMS'] is None else ",%.2f"%(self.h['CALC_SLOPE_RMS'])),    \
-            1e9*self.stdev_psd_heights(),           \
-            1e9*self.zprof.std(),   \
-            ("" if self.h['CALC_HEIGHT_RMS'] is None else ",%.2f"%(self.h['CALC_HEIGHT_RMS'])),  ))
+        if table_number == 1:
+            return  ('%d & %s & %d & %.2f  (%.2f %s) & %.2f  (%.2f %s) \\\\'%(   \
+                self.get_input_value("entryNumber"),   \
+                self.h['SURFACE_SHAPE'],
+                int(1e3*(self.sy[-1]-self.sy[0])),   \
+                1e6*self.sz.std(),      \
+                1e6*self.stdev_psd_slopes(),           \
+                ("" if self.h['CALC_SLOPE_RMS'] is None else ",%.2f"%(self.h['CALC_SLOPE_RMS'])),    \
+                1e9*self.stdev_psd_heights(),           \
+                1e9*self.zprof.std(),   \
+                ("" if self.h['CALC_HEIGHT_RMS'] is None else ",%.2f"%(self.h['CALC_HEIGHT_RMS'])),  ))
+        else:
+            return  ('%d & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f \\\\'%(   \
+                self.get_input_value("entryNumber"),   \
+                self.momentsHeights[2],self.momentsHeights[3],\
+                self.momentsSlopes[2],self.momentsSlopes[3],\
+                -self.powerlaw["hgt_pendent"], \
+                -self.powerlaw["slp_pendent"], \
+                ))
 
     def _text_line(self):
         """
@@ -1025,7 +1094,7 @@ class dabam(object):
 
 def cdf(sy, sz, method = 1 ):
     """
-     cdf: Calculates the profile from the slope by simple integration
+     cdf: Calculates the profile from the slope by simple integration (antiderivative)
 
       INPUTS:
            sy - 1D array of (equally-spaced) lengths.
@@ -1220,6 +1289,30 @@ def write_shadowSurface(s,xx,yy,outFile='presurface.dat'):
         fs.close()
         #print ("File "+outFile+" written to disk (for SHADOW).")
 
+def moment(array,substract_one_in_variance_n=False):
+    """
+    Calculate the first four statistical moments of a 1D array
+    :param array:
+    :param substract_one_in_variance_n:
+    :return: m0 (mean) m1 (variance) m2 (skewness) m3 (kurtosis)
+    """
+    a1 = numpy.array(array)
+    m0 = a1.mean()
+
+    tmp = (a1-m0)**2
+    if substract_one_in_variance_n:
+        m1 = tmp.sum()/(a1.size-1)
+    else:
+        m1 = tmp.sum()/(a1.size)
+    sd = numpy.sqrt(m1)
+
+    tmp = (a1-m0)**3
+    m2 = tmp.sum()/sd**3/a1.size
+
+    tmp = (a1-m0)**4
+    m3 = (tmp.sum()/sd**4/a1.size) - 3 #Fisher definition: substract 3 to return 0 for Normal distribution
+    return m0,m1,m2,m3
+
 
 def dabam_summary(nmax=25,latex=0):
     """
@@ -1229,18 +1322,22 @@ def dabam_summary(nmax=25,latex=0):
     :param latex:
     :return:
     """
-    if latex:
-        txt = ""
-    else:
+    if latex ==0:
         txt = "Entry    shape  Length[mm]  hgt_err [um]  slp_err [urad]\n"
+    else:
+        txt = ""
+
+
     for i in range(nmax):
         dm = dabam()
         dm.set_input_outputFileRoot("")  # avoid output files
         dm.set_input_silent(1)
         dm.set_entry(i+1)
         dm.load()
-        if latex:
-            txt += dm._latex_line()+"\n"
+        if latex == 1:
+            txt += dm._latex_line(table_number=1)+"\n"
+        elif latex == 2:
+            txt += dm._latex_line(table_number=2)+"\n"
         else:
             txt += dm._text_line()+"\n"
     return(txt)
