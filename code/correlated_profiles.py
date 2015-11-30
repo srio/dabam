@@ -24,6 +24,8 @@ __copyright = "ESRF, 2015"
 import numpy
 from matplotlib import pylab as plt
 
+from dabam import psd as psd
+
 
 
 def rsgeng1D(N,rL,h,cl):
@@ -144,58 +146,6 @@ def acf1D(f,x):
     # end;
     return acf,cl,lags
 
-def psd(x, y, onlyrange = None):
-    """
-     psd: Calculates the PSD (power spectral density) from a profile
-
-      INPUTS:
-           x - 1D array of (equally-spaced) lengths.
-           y - 1D array of heights.
-      OUTPUTS:
-           f - 1D array of spatial frequencies, in units of 1/[x].
-           s - 1D array of PSD values, in units of [y]^3.
-      KEYWORD PARAMETERS:
-           onlyrange - 2-element array specifying the min and max spatial
-               frequencies to be considered. Default is from
-               1/(length) to 1/(2*interval) (i.e., the Nyquist
-               frequency), where length is the length of the scan,
-               and interval is the spacing between points.
-
-      PROCEDURE
-            S=Length*ABS(ifft(Y*Window)^2
-            Where Length is as described above, and Window is the value of
-            the optional window function
-
-    """
-    n_pts = x.size
-    if (n_pts <= 1):
-        print ("psd: Error, must have at least 2 points.")
-        return 0
-
-    xx = x
-    yy = y
-
-    window=yy*0+1.
-    length=xx.max()-xx.min()  # total scan length.
-    # psd
-    s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2)
-
-    s=s[1:(n_pts/2+1*numpy.mod(n_pts,2))]  # take an odd number of points.
-    n_ps=s.size                       # number of psd points.
-    interval=length/(n_pts-1)         # sampling interval.
-    f_min=1./length                   # minimum spatial frequency.
-    f_max=1./(2.*interval)            # maximum (Nyquist) spatial frequency.
-    # spatial frequencies.
-    f=numpy.arange(float(n_ps))/(n_ps-1)*(f_max-f_min)+f_min
-
-    if onlyrange != None:
-        roi =  (f <= onlyrange[1]) * (f >= onlyrange[0])
-        if roi.sum() > 0:
-            roi = roi.nonzero()
-            f = f[roi]
-            s = s[roi]
-
-    return s,f
 
 
 def main():
@@ -205,13 +155,15 @@ def main():
     # create profile
     #
 
-    N = 1000
-    mirror_length = 1.0
-    height_rms = 3e-9
 
-    profile_type = 0 # 0=Fractal, 1=Gaussian
+
+    profile_type = 1 # 0=Fractal, 1=Gaussian
 
     if profile_type == 0:
+        N = 1000
+        mirror_length = 1.0
+        height_rms = 3e-9
+
         xmirr = numpy.linspace(-0.5*mirror_length,0.5*mirror_length,N)
         xstep = mirror_length/(N-1)
 
@@ -226,7 +178,10 @@ def main():
         x = xmirr
         f = ymirr / ymirr.std() * height_rms
     elif profile_type == 1:
+        N = 1000
+        mirror_length = 1.0
         height_rms = 3e-9
+
         correlation_length = 0.03
         x, f = rsgeng1D(N,mirror_length,height_rms,correlation_length)
 

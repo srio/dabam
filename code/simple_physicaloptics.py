@@ -71,13 +71,15 @@ def main():
     #
     do_interpolate = 0
     if do_interpolate:
-        mirror_length = hy0.max() - hy0.min()
-        hy = numpy.linspace(hy0.min(),hy0.max(),2000)
+        mirror_length = (hy0.max() - hy0.min())
+        npoints = 500 # hy0.size
+        hy = numpy.linspace(-0.5*mirror_length,0.5*mirror_length,npoints)
         hz = numpy.interp(hy,hy0,hz0)
     else:
         hy = hy0
         hz = hz0
-
+    #remove mean
+    hz -= hz.mean()
 
     L = hy[-1]-hy[0]
     print("Mirror data from file: %s :"%input_file)
@@ -188,6 +190,9 @@ def main():
     tmpAbscissas = position3x * 1e6
 
     outFile = "tmpPhysicalOptics.dat"
+
+    itmp = numpy.argmax(fieldIntensity)
+    tmpAbscissas = tmpAbscissas - tmpAbscissas[itmp]
     if outFile != "":
         dd=numpy.concatenate( (tmpAbscissas, fieldIntensity) ,axis=0).reshape(2,-1).transpose()
         numpy.savetxt(outFile,dd)
@@ -203,8 +208,14 @@ def main():
         #
         from matplotlib import pylab as plt
 
-        plt.figure(1)
-        plt.plot(position3x*1e6,fieldIntensity)
+        # plt.figure(1)
+        # plt.plot(hy*1e3,hz*1e9)
+        # plt.title("Profile used")
+        # plt.xlabel("X [mm]")
+        # plt.ylabel("Z [nm]")
+
+        plt.figure(2)
+        plt.plot(tmpAbscissas,fieldIntensity)
         plt.title("Fresnel-Kirchhoff Diffraction")
         plt.xlabel("X [um]")
         plt.ylabel("Intensity [a.u.]")

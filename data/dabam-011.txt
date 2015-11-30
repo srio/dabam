@@ -26,7 +26,7 @@
   "PLOT_TITLE_Y3": "Slope (urad)",
   "PLOT_TITLE_Y4": "Residual slope (um)",
   "CALC_HEIGHT_RMS": 3.23343, 
-  "CALC_HEIGHT_RMS_FACTOR": 1e-6, 
+  "CALC_HEIGHT_RMS_FACTOR": 1e-9,
   "CALC_SLOPE_RMS": 0.2290927, 
   "CALC_SLOPE_RMS_FACTOR": 1e-6, 
   "USER_EXAMPLE": "This is an example of user keyword",

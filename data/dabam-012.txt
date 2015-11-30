@@ -28,7 +28,7 @@
   "CALC_HEIGHT_RMS": 2.5052773, 
   "CALC_HEIGHT_RMS_FACTOR": 1e-6, 
   "CALC_SLOPE_RMS": 0.318848, 
-  "CALC_SLOPE_RMS_FACTOR": 1e-6, 
+  "CALC_SLOPE_RMS_FACTOR": 1e-9,
   "USER_EXAMPLE": "This is an example of user keyword",
   "USER_REFERENCE": "HOMS 4",
   "USER_ADDED_BY": "Daniele Cocco"

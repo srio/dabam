@@ -107,12 +107,16 @@ def main():
     bin_centers = bin_edges[0:-1]
     bin_centers += (bin_edges[1] - bin_centers[0])
 
+
+
+    dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
+    dd_normalization = 1000 * image_histogram.sum() * numpy.abs(dd[1,0]-dd[0,0])
+
+    dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
+    dd[:,1] =  dd[:,1] / dd_normalization #dd[:,1].max()
     # dump to file
     outFile = "tmpImage.dat"
     if outFile != "":
-        dd = numpy.concatenate( (bin_centers.reshape(-1,1), image_histogram.reshape(-1,1)),axis=1)
-        dd[:,0] *= -1e6 # in microns, inverted to agree with shadow
-        dd[:,1] /= dd[:,1].max()
         numpy.savetxt(outFile,dd)
         print("File written to disk: %s"%outFile)
 
@@ -135,7 +139,8 @@ def main():
     do_plots = 0
     if do_plots:
         f1 = plt.figure(3)
-        plt.plot(1e6*bin_centers,image_histogram)
+        #plt.plot(1e6*bin_centers,image_histogram)
+        plt.plot(dd[:,0],dd[:,1])
         plt.xlim((-50,50))
         plt.title("image histogram FWHM = %.3f um, theory %.3f"%(fwhm,fwhm_theory*1e6))
         plt.xlabel("Y [um]")
