@@ -10,6 +10,13 @@ if __name__ == '__main__':
     text = dabam.dabam_summary()
     print(text)
 
+
+    out = dabam.dabam_summary_dictionary()
+    for i in range(len(out)):
+        print("i=:%d, entry:%d"%(i,(out[i])["entry"]))
+
+    print(out[13])
+
     #
     # load a given entry (=14)
     #
