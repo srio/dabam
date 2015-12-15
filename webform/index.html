@@ -11,50 +11,48 @@
     <title>DABAM - Profiles Submission Form</title>
   </head>
   <body><!--
-{  "FILE_FORMAT": 1,   "FILE_HEADER_LINES": 4,   "X1_FACTOR": 0.001,   "Y1_FACTOR": 1e-06,   "YEAR_FABRICATION": null,   "SURFACE_SHAPE": "plane",   "FUNCTION": null,   "LENGTH": 1.36,   "WIDTH": 0.16,   "THICK": 0.05,   "LENGTH_OPTICAL": 1.2,   "SUBSTRATE": "silicon",   "COATING": null,   "FACILITY": "ESRF",   "INSTRUMENT": null,   "POLISHING": null,   "ENVIRONMENT": null,   "SCAN_DATE": null,   "PLOT_TITLE_X1": "x(mm)",   "PLOT_TITLE_Y1": "Slope (urad)",   "CALC_HEIGHT_RMS": null,   "CALC_HEIGHT_RMS_FACTOR": null,   "CALC_SLOPE_RMS": null,   "CALC_SLOPE_RMS_FACTOR": null,   "USER_EXAMPLE": "This is an example of user keyword"}-->
+{  "FILE_FORMAT": 1,   "FILE_HEADER_LINES": 4,   "X1_FACTOR": 0.001,   "Y1_FACTOR": 1e-06,   "YEAR_FABRICATION": null,   "SURFACE_SHAPE": "plane",   "FUNCTION": 4,   "LENGTH": 1.36,   "WIDTH": 0.16,   "THICK": 0.05,   "LENGTH_OPTICAL": 1.2,   "SUBSTRATE": "silicon",   "COATING": null,   "FACILITY": "ESRF",   "INSTRUMENT": null,   "POLISHING": null,   "ENVIRONMENT": null,   "SCAN_DATE": null,   "PLOT_TITLE_X1": "x(mm)",   "PLOT_TITLE_Y1": "Slope (urad)",   "CALC_HEIGHT_RMS": null,   "CALC_HEIGHT_RMS_FACTOR": null,   "CALC_SLOPE_RMS": null,   "CALC_SLOPE_RMS_FACTOR": null,   "USER_EXAMPLE": "This is an example of user keyword"}-->
     <div class="form-style-10">
-      <h1>DABAM <span>an open-source database of x-ray mirrors metrology</span><span>&nbsp;<br>
+      <h1><a href="http://ftp.esrf.eu/pub/scisoft/dabam/readme.html">DABAM</a> <span>an open-source database of x-ray mirrors metrology</span><span>&nbsp;<br>
           PROFILES SUBMISSION FORM</span></h1>
-      <form enctype="multipart/form-data" action="upload_file.php"  method="POST" id="MAIN_FORM">
+      <form enctype="multipart/form-data" action="upload_file.php" method="POST"
+        id="MAIN_FORM">
         <div class="section"><span>1</span>File Format</div>
         <div class="inner-wrap">
           <table>
             <tbody>
               <tr>
-                <td> <label>Type of file used</label> </td>
+                <td> <label>Type of file used *</label> </td>
                 <td style="padding: 20px">
                   <select style="width:200px" name="FILE_FORMAT" id="FILE_FORMAT">
-                      <option value="1">Slope</option>
-                      <option value="2">Height</option>
-                    </select>
+                    <option value="1">Slope</option>
+                    <option value="2">Height</option>
+                  </select>
                 </td>
-                <td style="padding: 10px"> <label>Number of header lines in the data file</label> </td>
-                <td style="padding: 10px"><input required style="width:60px" name="FILE_HEADER_LINES" id="FILE_HEADER_LINES"
-                      value="4"
-                      type="number">
-                </td>
+                <td style="padding: 10px"> <label>Number of header lines in the data file *</label> </td>
+                <td style="padding: 10px"><input required="" style="width:60px"
+                    name="FILE_HEADER_LINES"
+                    id="FILE_HEADER_LINES"
+                    value="1"
+                    type="number"> </td>
               </tr>
               <tr>
-                <td colspan="2"> <label style="text-align:right">Conversion factor from user's to SI
-                    units for the column index 0</label>
-                </td>
-                <td colspan="2" style="padding: 10px"><input required style="width:100px; text-align:right"
-                      name="X1_FACTOR"
-                      id="X1_FACTOR"
-                      value="0.001"
-                      type="Text">
-                </td>
+                <td colspan="2"> <label style="text-align:right">Conversion factor from user's to SI units for the column index 0 *</label> </td>
+                <td colspan="2" style="padding: 10px"><input required=""
+                    style="width:100px; text-align:right"
+                    name="X1_FACTOR"
+                    id="X1_FACTOR"
+                    value="0.001"
+                    type="Text"> </td>
               </tr>
               <tr>
-                <td colspan="2"> <label style="text-align:right">Conversion factor from user's to SI
-                    units for the column index  1</label>
-                <td colspan="2" style="padding: 10px"><input required style="width:100px; text-align:right"
-                      name="Y1_FACTOR"
-                      id="Y1_FACTOR"
-                      value="1e-06"
-                      type="Text">
-                </td>
-                </td>
+                <td colspan="2"> <label style="text-align:right">Conversion factor from user's to SI units for the column index 1 *</label> </td>
+                <td colspan="2" style="padding: 10px"><input required=""
+                    style="width:100px; text-align:right"
+                    name="Y1_FACTOR"
+                    id="Y1_FACTOR"
+                    value="1e-06"
+                    type="Text"> </td>
               </tr>
             </tbody>
           </table>
@@ -65,21 +63,19 @@
             <tbody>
               <tr>
                 <td> <label>Year of fabrication</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="YEAR_FABRICATION"
                     id="YEAR_FABRICATION"
-                    type="Text">
-                </td>
-                <td> <label>Length in SI units [m]</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                    type="Text"> </td>
+                <td> <label>Length in SI units [m] *</label> </td>
+                <td style="padding: 10px"> <input required="" style="width:100px; text-align:right"
                     name="LENGTH"
                     id="LENGTH"
                     value="1.36"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
-                <td> <label>Type of Mirror</label> </td>
+                <td> <label>Type of Mirror *</label> </td>
                 <td style="padding: 10px">
                   <select style="width:200px" name="SURFACE_SHAPE" id="SURFACE_SHAPE">
                     <option value="Plane">Plane</option>
@@ -91,62 +87,60 @@
                   </select>
                 </td>
                 <td> <label>Width in SI units [m]</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="WIDTH"
                     id="WIDTH"
                     value="0.16"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
-                <td> <label>Function</label> </td>
+                <td> <label>Function *</label> </td>
                 <td style="padding: 10px">
                   <select style="width:200px" name="FUNCTION" id="FUNCTION">
                     <option value="White Beam Mirror">White Beam Mirror</option>
                     <option value="Collimating Mirror">Collimating Mirror</option>
                     <option value="Focusing Mirror">Focusing Mirror</option>
-                    <option value="Other">Other</option>
+                    <option value="Other" selected="true">Other</option>
                   </select>
                 </td>
                 <td> <label>Thickness in SI units [m]</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="THICK"
                     id="THICK"
                     value="0.05"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
                 <td colspan="2"> &nbsp; </td>
                 <td> <label>Optical Length SI units [m]<br>
                     (usually the scan length)</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="LENGTH_OPTICAL"
                     id="LENGTH_OPTICAL"
                     value="1.20"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
                 <td> <label>Instrument type used</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="INSTRUMENT" id="INSTRUMENT"
-                    type="Text">
-                </td>
+                <td style="padding: 10px"> <input style="width:150px" name="INSTRUMENT"
+                    id="INSTRUMENT"
+                    type="Text"> </td>
                 <td> <label>Mirror Substrate</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="SUBSTRATE" id="SUBSTRATE"
-                    type="Text">
-                </td>
+                <td style="padding: 10px"> <input style="width:150px" name="SUBSTRATE"
+                    id="SUBSTRATE"
+                    type="Text"> </td>
               </tr>
               <tr>
                 <td> <label>Facility where data<br>
-                    has been measured</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="FACILITY" id="FACILITY"
-                    type="Text">
-                </td>
+                    has been measured *</label> </td>
+                <td style="padding: 10px"> <input required="" style="width:150px"
+                    name="FACILITY"
+                    id="FACILITY"
+                    type="Text"> </td>
                 <td> <label>Mirror Coating</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="COATING" id="COATING"
-                    type="Text">
-                </td>
+                <td style="padding: 10px"> <input style="width:150px" name="COATING"
+                    id="COATING"
+                    type="Text"> </td>
               </tr>
               <tr>
                 <td> <label>Environment</label> </td>
@@ -155,13 +149,13 @@
                     <option value="Clamped">Clamped</option>
                     <option value="Gravity Direction">Gravity Direction</option>
                     <option value="Cooling System">Cooling System</option>
-                    <option value="Other">Other</option>
+                    <option value="Other" selected="true">Other</option>
                   </select>
                 </td>
                 <td> <label>Polishing Method</label> </td>
-                <td style="padding: 10px"> <input required style="width:150px" name="POLISHING" id="POLISHING"
-                    type="Text">
-                </td>
+                <td style="padding: 10px"> <input style="width:150px" name="POLISHING"
+                    id="POLISHING"
+                    type="Text"> </td>
               </tr>
             </tbody>
           </table>
@@ -171,77 +165,53 @@
           <table>
             <tbody>
               <tr>
-                <td> <label>Profile File</label></td>
-                <td colspan="3" style="padding: 10px"><input required name="dabamfile" id="dabamfile" type="file"></td>
+                <td> <label>Profile File *</label></td>
+                <td colspan="3" style="padding: 10px"><input required=""
+                    name="dabamfile"
+                    id="dabamfile"
+                    type="file"></td>
               </tr>
               <tr>
                 <td> <label>Date of the measurement<br>
                     in format YYYYMMDD</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="SCAN_DATE"
                     id="SCAN_DATE"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
                 <td> <label>Heights RMS value<br>
-                    in user's units</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                    in SI units [m]</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="CALC_HEIGHT_RMS"
                     id="CALC_HEIGHT_RMS"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
-                <td> <label>X Axis Plot Title</label> </td>
-                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_X1" id="PLOT_TITLE_X1"
-                    value="x (mm)"
-                    type="Text">
-                </td>
-                <td> <label>Conversion factor<br>
-                    from user's unit to SI (m)</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
-                    name="CALC_HEIGHT_RMS_FACTOR"
-                    id="CALC_HEIGHT_RMS_FACTOR"
-                    type="Text">
-                </td>
-              </tr>
-              <tr>
-                <td> <label>Y Axis Plot Title</label> </td>
-                <td style="padding: 10px"> <input required style="width:200px" name="PLOT_TITLE_Y1" id="PLOT_TITLE_Y1"
-                    value="Slope (urad)"
-                    type="Text">
-                </td>
+                <td> <label>User Contact *</label> </td>
+                <td style="padding: 10px"> <input required="" style="width:200px"
+                    name="USER_ADDED_BY"
+                    id="USER_ADDED_BY"
+                    value="(name and email)"
+                    type="Text"> </td>
                 <td> <label>Slopes RMS value<br>
-                    in user's units</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
+                    in SI units [rad]</label> </td>
+                <td style="padding: 10px"> <input style="width:100px; text-align:right"
                     name="CALC_SLOPE_RMS"
                     id="CALC_SLOPE_RMS"
-                    type="Text">
-                </td>
+                    type="Text"> </td>
               </tr>
               <tr>
-                <td colspan="2"> &nbsp; </td>
-                <td> <label>Conversion factor<br>
-                    from user's unit to SI (rad)</label> </td>
-                <td style="padding: 10px"> <input required style="width:100px; text-align:right"
-                    name="CALC_SLOPE_RMS_FACTOR"
-                    id="CALC_SLOPE_RMS_FACTOR"
-                    type="Text">
-                </td>
-              </tr>
-              <tr>
-                <td colspan="4"> <label>User's keywords <textarea style="display:block; resize: vertical;"
-                      name="USER_EXAMPLE">This is an example of user keyword</textarea></label> </td>
+                <td colspan="4"> <label>User's comment<textarea style="display:block; resize: vertical;"
+                      name="USER_REFERENCE"></textarea></label> </td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="button-section" style="text-align:right"> <input name="Submit"
             value="Submit Profile"
-            type="submit">
-        </div>
+            type="submit"> </div>
       </form>
     </div>
-  <script>
+    <script>
 
     function getPosition(element) {
         var xPosition = 0;
@@ -254,7 +224,28 @@
         }
         return { x: xPosition, y: yPosition };
     }
-
+      
+    var control = document.getElementById("dabamfile");
+    control.addEventListener("change", function(event) {
+        var files = control.files;
+        for (var i = 0; i < files.length; i++) {
+            var reader = new FileReader();
+            reader.onload = (function(theFile, theReader, theControl) {
+              return function(e) {
+                var fileContents = theReader.result;
+                if (fileContents.match(/[^\u0000-\u007f]/)) {
+                  position = getPosition(theControl);
+                  window.scrollTo(position.x, position.y);
+                  inlineMsg(theControl.name, 'Non-ASCII file, please change it', 2);
+                  theControl.value = "";
+                }
+              };
+            })(files[i], reader, control);
+            reader.readAsBinaryString(files[i]);
+        }
+    }, false);
+      
+      
     var forms = document.getElementsByTagName('form');
     for (var i = 0; i < forms.length; i++) {
         forms[i].noValidate = true;
@@ -265,16 +256,30 @@
                 event.preventDefault();
 
                 for (var j = 0; j < event.target.elements.length; j++) {
-                    element = event.target.elements[j]
+                    element = event.target.elements[j];
+                                           
                     if (!element.checkValidity()){
-                      position = getPosition(element)
-                      window.scrollTo(position.x, position.y)
-                      inlineMsg(element.name, "Required field missing", 2)
+                      position = getPosition(element);
+                      window.scrollTo(position.x, position.y);
+                      inlineMsg(element.name, "Required field missing", 2);
 
                       break;
-                    }
+                    } 
                 }
-            }
+            } else {
+                for (var j = 0; j < event.target.elements.length; j++) {
+                    element = event.target.elements[j];
+                                           
+                    if (element.name == "dabamfile" && element.value==""){
+                        event.preventDefault();
+
+                        position = getPosition(element);
+                        inlineMsg(element.name, "Required field missing", 2);
+                      
+                        break;
+                    } 
+                }
+           }
         }, false);
     }
 
