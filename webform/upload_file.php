@@ -7,7 +7,7 @@ function sanitizeString($var){
 }
 
 function valueToJsonValue($value, $type){
-
+    
    if($value == "null" || $value == ""){
       return "null";
    }
@@ -31,37 +31,6 @@ function valueToJsonValue($value, $type){
 function createTxtFilecontent($args)
 {
 
-/*
-{
-  "FILE_FORMAT": 1, 
-  "FILE_HEADER_LINES": 4, 
-  "X1_FACTOR": 0.001, 
-  "Y1_FACTOR": 1e-06, 
-  "YEAR_FABRICATION": null, 
-  "SURFACE_SHAPE": "plane", 
-  "FUNCTION": null, 
-  "LENGTH": 1.36, 
-  "WIDTH": 0.16, 
-  "THICK": 0.05, 
-  "LENGTH_OPTICAL": 1.2, 
-  "SUBSTRATE": "silicon", 
-  "COATING": null, 
-  "FACILITY": "ESRF", 
-  "INSTRUMENT": null, 
-  "POLISHING": null, 
-  "ENVIRONMENT": null, 
-  "SCAN_DATE": null, 
-  "PLOT_TITLE_X1": "x(mm)", 
-  "PLOT_TITLE_Y1": "Slope (urad)", 
-  "CALC_HEIGHT_RMS": null, 
-  "CALC_HEIGHT_RMS_FACTOR": null, 
-  "CALC_SLOPE_RMS": null, 
-  "CALC_SLOPE_RMS_FACTOR": null, 
-  "USER_EXAMPLE": "This is an example of user keyword"
-}
-*/
-
-
 $fields = array(
 array("FILE_FORMAT","int"),
 array("FILE_HEADER_LINES","int"),
@@ -81,13 +50,10 @@ array("INSTRUMENT","str"),
 array("POLISHING","str"),
 array("ENVIRONMENT","str"),
 array("SCAN_DATE","str"),
-array("PLOT_TITLE_X1","str"),
-array("PLOT_TITLE_Y1","str"),
-array("CALC_HEIGHT_RMS","str"),
-array("CALC_HEIGHT_RMS_FACTOR","str"),
-array("CALC_SLOPE_RMS","str"),
-array("CALC_SLOPE_RMS_FACTOR","str"),
-array("USER_EXAMPLE","str")
+array("CALC_HEIGHT_RMS","float"),
+array("CALC_SLOPE_RMS","float"),
+array("USER_ADDED_BY","str"),
+array("USER_REFERENCE","str")
 );
 
 $txt_content = "{\n";//array("{");
@@ -187,12 +153,12 @@ else
  
   $ok = sendEmail($email_content);
   
-  if ($ok) { 
-        echo "<p>mail sent!</p>"; 
-    } else { 
-        echo "<p>mail could not be sent!</p>"; 
-    }  
-  
+  if ($ok) {
+      $url = 'http://dabam.scienceontheweb.net/message_sent.html';
+  } else {
+      $url = 'http://dabam.scienceontheweb.net/message_not_sent.html';
+  }
+  header( "Location: $url" );
   }
 
   
