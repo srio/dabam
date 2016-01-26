@@ -4,7 +4,7 @@
   "X1_FACTOR": 0.001,
   "Y1_FACTOR": 1,
   "YEAR_FABRICATION": "2002",
-  "SURFACE_SHAPE": "Spherical",
+  "SURFACE_SHAPE": "spherical",
   "FUNCTION": "Focusing Mirror",
   "LENGTH": 1.2,
   "WIDTH": 0.08,
