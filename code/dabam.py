@@ -762,6 +762,8 @@ class dabam(object):
 
         a[:,0] = a[:,0]*self.metadata['X1_FACTOR']
         a[:,1] = a[:,1]*self.metadata['Y1_FACTOR']
+
+
         ncols = a.shape[1]
 
         if int(self.metadata["FILE_FORMAT"]) <= 2:
