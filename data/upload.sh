@@ -1,14 +1,19 @@
-#scp dabam-030.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-030.dat
-#scp dabam-030.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-030.txt
-scp dabam-031.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-031.dat
-scp dabam-031.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-031.txt
-#scp dabam-032.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-032.dat
-#scp dabam-032.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-032.txt
-#scp dabam-033.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-033.dat
-#scp dabam-033.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-033.txt
-#scp dabam-034.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-034.dat
-#scp dabam-034.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-034.txt
-#scp dabam-035.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-035.dat
-#scp dabam-035.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-035.txt
-#scp dabam-036.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-036.dat
-#scp dabam-036.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-036.txt
+scp dabam-037.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-037.dat
+scp dabam-037.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-037.txt
+
+scp dabam-038.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-038.dat
+scp dabam-038.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-038.txt
+
+scp dabam-039.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-039.dat
+scp dabam-039.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-039.txt
+
+scp dabam-040.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-040.dat
+scp dabam-040.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-040.txt
+
+scp dabam-041.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-041.dat
+scp dabam-041.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-041.txt
+
+scp dabam-042.dat srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-042.dat
+scp dabam-042.txt srio@ftp:/ftp/anonymous/pub/scisoft/dabam/data/dabam-042.txt
+
+
