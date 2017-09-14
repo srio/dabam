@@ -1,8 +1,8 @@
 #
 # id16a 
-# dabam-055 ML single mirror monochromator
-# dabam-056 KB VFM
-# dabam-057 KB HFM
+# dabam-900 ML single mirror monochromator
+# dabam-901 KB VFM
+# dabam-902 KB HFM
 #
 cp dabam-* ../../../data
 
