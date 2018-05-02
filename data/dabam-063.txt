@@ -19,6 +19,9 @@
   "SCAN_DATE": null,
   "CALC_HEIGHT_RMS": null,
   "CALC_SLOPE_RMS": null,
+  "ELLIPSE_DESIGN_P": 6.11,
+  "ELLIPSE_DESIGN_Q": 0.40,
+  "ELLIPSE_DESIGN_THETA": 2.9e-3,
   "USER_ADDED_BY": "hiram via srio",
   "USER_REFERENCE": "KBII HFM"
 }
