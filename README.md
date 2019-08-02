@@ -5,7 +5,7 @@ dabam
 ** NOTE THAT THIS IS A WORKING REPOSITORY **
 ** data directory contains tha master repository of DABAM data **
 ** The official version of dabam.py is maintained at:
-https://github.com/lucarebuffi/SR-xraylib/blob/master/srxraylib/metrology/dabam.py **
+https://github.com/oasys-kit/SR-xraylib/blob/master/srxraylib/metrology/dabam.py **
 
 
 DABAM: an open-source database of x-ray mirrors metrology
