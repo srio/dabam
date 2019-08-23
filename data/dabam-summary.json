@@ -1,0 +1,740 @@
+{
+    "entry_001": {
+        "entry": 1,
+        "surface": "plane",
+        "length": 1.2,
+        "slp_err": 4.867211352304034e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.385445231364253e-08,
+        "hgt_err_user": null
+    },
+    "entry_002": {
+        "entry": 2,
+        "surface": "plane",
+        "length": 0.36,
+        "slp_err": 1.511722275429772e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.459350223865409e-09,
+        "hgt_err_user": null
+    },
+    "entry_003": {
+        "entry": 3,
+        "surface": "spherical",
+        "length": 0.11800000000000001,
+        "slp_err": 1.7409179394113747e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.5578349867171223e-09,
+        "hgt_err_user": null
+    },
+    "entry_004": {
+        "entry": 4,
+        "surface": "elliptical",
+        "length": 0.032,
+        "slp_err": 1.346980084984337e-07,
+        "slp_err_user": null,
+        "hgt_err": 2.2463056449016078e-10,
+        "hgt_err_user": null
+    },
+    "entry_005": {
+        "entry": 5,
+        "surface": "spherical",
+        "length": 0.42925,
+        "slp_err": 8.422232698576854e-07,
+        "slp_err_user": null,
+        "hgt_err": 3.18959444197251e-08,
+        "hgt_err_user": null
+    },
+    "entry_006": {
+        "entry": 6,
+        "surface": "elliptical",
+        "length": 0.2,
+        "slp_err": 1.0103528706303063e-06,
+        "slp_err_user": null,
+        "hgt_err": 2.977009093056691e-09,
+        "hgt_err_user": null
+    },
+    "entry_007": {
+        "entry": 7,
+        "surface": "plane",
+        "length": 0.099,
+        "slp_err": 5.770463973069622e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.071772674351512e-10,
+        "hgt_err_user": null
+    },
+    "entry_008": {
+        "entry": 8,
+        "surface": "plane",
+        "length": 0.09799999999999998,
+        "slp_err": 5.743850865786477e-07,
+        "slp_err_user": 0.67,
+        "hgt_err": 4.045858884697125e-09,
+        "hgt_err_user": 0.276
+    },
+    "entry_009": {
+        "entry": 9,
+        "surface": "plane",
+        "length": 0.09799999999999998,
+        "slp_err": 4.3749205175283516e-07,
+        "slp_err_user": 0.61,
+        "hgt_err": 3.521354986995072e-09,
+        "hgt_err_user": 0.41
+    },
+    "entry_010": {
+        "entry": 10,
+        "surface": "plane",
+        "length": 0.44268,
+        "slp_err": 2.326852582576853e-07,
+        "slp_err_user": 0.232,
+        "hgt_err": 6.198867957219947e-09,
+        "hgt_err_user": 3.048414
+    },
+    "entry_011": {
+        "entry": 11,
+        "surface": "plane",
+        "length": 0.44574,
+        "slp_err": 2.2909263019862839e-07,
+        "slp_err_user": 0.2290927,
+        "hgt_err": 6.589434752146546e-09,
+        "hgt_err_user": 3.23343
+    },
+    "entry_012": {
+        "entry": 12,
+        "surface": "plane",
+        "length": 0.442,
+        "slp_err": 3.1884799986283437e-07,
+        "slp_err_user": 0.318848,
+        "hgt_err": 2.862567661865592e-09,
+        "hgt_err_user": 2.5052773
+    },
+    "entry_013": {
+        "entry": 13,
+        "surface": "spherical",
+        "length": 0.114,
+        "slp_err": 1.295590248137535e-06,
+        "slp_err_user": 1.5106354,
+        "hgt_err": 8.970967585557745e-09,
+        "hgt_err_user": 10.857919
+    },
+    "entry_014": {
+        "entry": 14,
+        "surface": "spherical",
+        "length": 0.24,
+        "slp_err": 1.1455985918342476e-06,
+        "slp_err_user": 1.0503953,
+        "hgt_err": 2.3282370551992348e-08,
+        "hgt_err_user": 15.372782
+    },
+    "entry_015": {
+        "entry": 15,
+        "surface": "toroidal",
+        "length": 0.8,
+        "slp_err": 2.1310860944683397e-06,
+        "slp_err_user": 2.126065,
+        "hgt_err": 1.7087082931727092e-07,
+        "hgt_err_user": 97.355965
+    },
+    "entry_016": {
+        "entry": 16,
+        "surface": "toroidal",
+        "length": 0.23900000000000002,
+        "slp_err": 1.8485708694033224e-06,
+        "slp_err_user": 1.863797,
+        "hgt_err": 5.478132138162667e-08,
+        "hgt_err_user": 36.539151
+    },
+    "entry_017": {
+        "entry": 17,
+        "surface": "toroidal",
+        "length": 0.495,
+        "slp_err": 2.273870892211282e-06,
+        "slp_err_user": 2.4019323,
+        "hgt_err": 6.154022448351383e-08,
+        "hgt_err_user": 47.577432
+    },
+    "entry_018": {
+        "entry": 18,
+        "surface": "cylindrical",
+        "length": 0.33,
+        "slp_err": 1.1887203900112725e-07,
+        "slp_err_user": 0.12,
+        "hgt_err": 1.8320849893565253e-09,
+        "hgt_err_user": null
+    },
+    "entry_019": {
+        "entry": 19,
+        "surface": "elliptical",
+        "length": 0.35000000000000003,
+        "slp_err": 1.4077098440555695e-07,
+        "slp_err_user": 0.06,
+        "hgt_err": 7.376952297005821e-09,
+        "hgt_err_user": null
+    },
+    "entry_020": {
+        "entry": 20,
+        "surface": "elliptical",
+        "length": 0.12150000000000001,
+        "slp_err": 4.5228222562513567e-07,
+        "slp_err_user": 0.5,
+        "hgt_err": 3.3930204078511393e-09,
+        "hgt_err_user": null
+    },
+    "entry_021": {
+        "entry": 21,
+        "surface": "elliptical",
+        "length": 0.43,
+        "slp_err": 4.344047612012816e-07,
+        "slp_err_user": 0.5,
+        "hgt_err": 6.0475146602813634e-09,
+        "hgt_err_user": null
+    },
+    "entry_022": {
+        "entry": 22,
+        "surface": "cylindrical",
+        "length": 1.1300000000000001,
+        "slp_err": 5.316779681113536e-06,
+        "slp_err_user": 5.0,
+        "hgt_err": 4.0082048902812397e-07,
+        "hgt_err_user": null
+    },
+    "entry_023": {
+        "entry": 23,
+        "surface": "plane",
+        "length": 0.127,
+        "slp_err": 1.7739037558262964e-07,
+        "slp_err_user": 0.18,
+        "hgt_err": 2.1735267890019665e-09,
+        "hgt_err_user": null
+    },
+    "entry_024": {
+        "entry": 24,
+        "surface": "plane",
+        "length": 0.7740011325,
+        "slp_err": 2.0236007243934267e-07,
+        "slp_err_user": 0.202,
+        "hgt_err": 5.353351159076127e-09,
+        "hgt_err_user": null
+    },
+    "entry_025": {
+        "entry": 25,
+        "surface": "plane",
+        "length": 0.2,
+        "slp_err": 7.235190671143242e-08,
+        "slp_err_user": 0.072352,
+        "hgt_err": 1.4724564821275926e-09,
+        "hgt_err_user": 1.3333
+    },
+    "entry_026": {
+        "entry": 26,
+        "surface": "spherical",
+        "length": 0.9489999990000001,
+        "slp_err": 8.594515251226592e-07,
+        "slp_err_user": null,
+        "hgt_err": 9.451545223495207e-08,
+        "hgt_err_user": null
+    },
+    "entry_027": {
+        "entry": 27,
+        "surface": "Toroidal",
+        "length": 0.28999999899999995,
+        "slp_err": 1.8578663118848596e-06,
+        "slp_err_user": 1.8,
+        "hgt_err": 4.197763046383989e-08,
+        "hgt_err_user": null
+    },
+    "entry_028": {
+        "entry": 28,
+        "surface": "Plane",
+        "length": 0.439999999,
+        "slp_err": 9.499724006142775e-07,
+        "slp_err_user": 0.93,
+        "hgt_err": 5.172559180208952e-08,
+        "hgt_err_user": null
+    },
+    "entry_029": {
+        "entry": 29,
+        "surface": "Spherical",
+        "length": 0.185999999,
+        "slp_err": 6.023743053117276e-07,
+        "slp_err_user": 0.55,
+        "hgt_err": 5.218183931759492e-09,
+        "hgt_err_user": null
+    },
+    "entry_030": {
+        "entry": 30,
+        "surface": "Plane",
+        "length": 0.48,
+        "slp_err": 8.9263363945668e-07,
+        "slp_err_user": null,
+        "hgt_err": 3.7003539383070035e-08,
+        "hgt_err_user": null
+    },
+    "entry_031": {
+        "entry": 31,
+        "surface": "Plane",
+        "length": 0.299,
+        "slp_err": 5.619498840478439e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.492778939579941e-08,
+        "hgt_err_user": null
+    },
+    "entry_032": {
+        "entry": 32,
+        "surface": "Plane",
+        "length": 0.299,
+        "slp_err": 1.334827581156931e-06,
+        "slp_err_user": null,
+        "hgt_err": 6.128135404024413e-08,
+        "hgt_err_user": null
+    },
+    "entry_033": {
+        "entry": 33,
+        "surface": "Plane",
+        "length": 0.39,
+        "slp_err": 2.9060102544042546e-07,
+        "slp_err_user": null,
+        "hgt_err": 6.795827581695155e-09,
+        "hgt_err_user": null
+    },
+    "entry_034": {
+        "entry": 34,
+        "surface": "Plane",
+        "length": 0.23900000000000002,
+        "slp_err": 4.398822240533675e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.1656030026607436e-08,
+        "hgt_err_user": null
+    },
+    "entry_035": {
+        "entry": 35,
+        "surface": "Plane",
+        "length": 0.23900000000000002,
+        "slp_err": 4.530570240778192e-07,
+        "slp_err_user": null,
+        "hgt_err": 6.930857944635757e-09,
+        "hgt_err_user": null
+    },
+    "entry_036": {
+        "entry": 36,
+        "surface": "Plane",
+        "length": 0.23900000000000002,
+        "slp_err": 4.791107661732935e-07,
+        "slp_err_user": null,
+        "hgt_err": 7.741641353396996e-09,
+        "hgt_err_user": null
+    },
+    "entry_037": {
+        "entry": 37,
+        "surface": "Spherical",
+        "length": 1.0,
+        "slp_err": 3.2052817067448593e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.1948356345187926e-08,
+        "hgt_err_user": null
+    },
+    "entry_038": {
+        "entry": 38,
+        "surface": "Spherical",
+        "length": 1.0,
+        "slp_err": 5.308141172481736e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.4991894220461655e-08,
+        "hgt_err_user": null
+    },
+    "entry_039": {
+        "entry": 39,
+        "surface": "Elliptical(Unbent)",
+        "length": 1.0,
+        "slp_err": 3.4461032067145213e-07,
+        "slp_err_user": null,
+        "hgt_err": 2.041154898990589e-08,
+        "hgt_err_user": null
+    },
+    "entry_040": {
+        "entry": 40,
+        "surface": "Elliptical(Unbent)",
+        "length": 1.0,
+        "slp_err": 3.48344798764529e-07,
+        "slp_err_user": null,
+        "hgt_err": 2.2639244795351318e-08,
+        "hgt_err_user": null
+    },
+    "entry_041": {
+        "entry": 41,
+        "surface": "Spherical",
+        "length": 0.7000000000000001,
+        "slp_err": 4.370795089413042e-07,
+        "slp_err_user": 4.37e-07,
+        "hgt_err": 1.634284255552681e-08,
+        "hgt_err_user": 1.0854e-08
+    },
+    "entry_042": {
+        "entry": 42,
+        "surface": "Elliptical(Detrended)",
+        "length": 0.9,
+        "slp_err": 1.7840932113038005e-06,
+        "slp_err_user": null,
+        "hgt_err": 1.7490704841685327e-07,
+        "hgt_err_user": null
+    },
+    "entry_043": {
+        "entry": 43,
+        "surface": "Toroid(Unbent)",
+        "length": 0.5988,
+        "slp_err": 9.19370187504502e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.69913840016321e-08,
+        "hgt_err_user": null
+    },
+    "entry_044": {
+        "entry": 44,
+        "surface": "Toroid(Unbent)",
+        "length": 0.5988,
+        "slp_err": 1.9540603196760786e-06,
+        "slp_err_user": null,
+        "hgt_err": 2.5983331173946605e-08,
+        "hgt_err_user": null
+    },
+    "entry_045": {
+        "entry": 45,
+        "surface": "toroidal",
+        "length": 1.3,
+        "slp_err": 7.801759099343412e-07,
+        "slp_err_user": 0.78,
+        "hgt_err": 1.0136588940155128e-07,
+        "hgt_err_user": 62
+    },
+    "entry_046": {
+        "entry": 46,
+        "surface": "toroidal",
+        "length": 1.3,
+        "slp_err": 7.480797813969525e-07,
+        "slp_err_user": 0.75,
+        "hgt_err": 8.985692213927553e-08,
+        "hgt_err_user": 55
+    },
+    "entry_047": {
+        "entry": 47,
+        "surface": "toroidal",
+        "length": 1.3,
+        "slp_err": 8.616423682660476e-07,
+        "slp_err_user": 0.86,
+        "hgt_err": 1.0170000507271173e-07,
+        "hgt_err_user": 64
+    },
+    "entry_048": {
+        "entry": 48,
+        "surface": "toroidal",
+        "length": 1.2,
+        "slp_err": 7.956459716867464e-07,
+        "slp_err_user": 0.8,
+        "hgt_err": 8.045287364683895e-08,
+        "hgt_err_user": 34
+    },
+    "entry_049": {
+        "entry": 49,
+        "surface": "toroidal",
+        "length": 1.2,
+        "slp_err": 1.4987774654407653e-06,
+        "slp_err_user": 1.47,
+        "hgt_err": 1.869498683451413e-07,
+        "hgt_err_user": 130
+    },
+    "entry_050": {
+        "entry": 50,
+        "surface": "toroidal",
+        "length": 1.2,
+        "slp_err": 4.88741944380472e-07,
+        "slp_err_user": 0.49,
+        "hgt_err": 3.4442267309101706e-08,
+        "hgt_err_user": 27
+    },
+    "entry_051": {
+        "entry": 51,
+        "surface": "plane",
+        "length": 0.19,
+        "slp_err": 3.7602020922184584e-07,
+        "slp_err_user": 0.4,
+        "hgt_err": 8.139691433867456e-09,
+        "hgt_err_user": 5.5
+    },
+    "entry_052": {
+        "entry": 52,
+        "surface": "plane",
+        "length": 0.19,
+        "slp_err": 6.107287869805421e-07,
+        "slp_err_user": 0.6,
+        "hgt_err": 1.0093203332215085e-08,
+        "hgt_err_user": 5.5
+    },
+    "entry_053": {
+        "entry": 53,
+        "surface": "plane",
+        "length": 0.14,
+        "slp_err": 3.3524952424986705e-07,
+        "slp_err_user": 0.33,
+        "hgt_err": 5.409939731254959e-09,
+        "hgt_err_user": 3.0
+    },
+    "entry_054": {
+        "entry": 54,
+        "surface": "plane",
+        "length": 0.14,
+        "slp_err": 3.791498725374229e-07,
+        "slp_err_user": 0.38,
+        "hgt_err": 4.24864489210876e-09,
+        "hgt_err_user": 2.1
+    },
+    "entry_055": {
+        "entry": 55,
+        "surface": "Toroid(Unbent)",
+        "length": 0.9,
+        "slp_err": 1.6048738531115932e-06,
+        "slp_err_user": null,
+        "hgt_err": 1.5330115031343736e-07,
+        "hgt_err_user": null
+    },
+    "entry_056": {
+        "entry": 56,
+        "surface": "Toroid(Unbent)",
+        "length": 0.6,
+        "slp_err": 5.312190238951967e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.815446626326673e-08,
+        "hgt_err_user": null
+    },
+    "entry_057": {
+        "entry": 57,
+        "surface": "Toroid(Unbent)",
+        "length": 0.7000000000000001,
+        "slp_err": 7.435770058701468e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.171358737612398e-08,
+        "hgt_err_user": null
+    },
+    "entry_058": {
+        "entry": 58,
+        "surface": "Plane",
+        "length": 0.22,
+        "slp_err": 1.735280885752975e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.1207353081839012e-09,
+        "hgt_err_user": null
+    },
+    "entry_059": {
+        "entry": 59,
+        "surface": "Plane",
+        "length": 0.22,
+        "slp_err": 1.884675958361484e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.377989416206678e-09,
+        "hgt_err_user": null
+    },
+    "entry_060": {
+        "entry": 60,
+        "surface": "Plane",
+        "length": 0.22,
+        "slp_err": 2.2939269882304139e-07,
+        "slp_err_user": null,
+        "hgt_err": 2.140360523270587e-09,
+        "hgt_err_user": null
+    },
+    "entry_061": {
+        "entry": 61,
+        "surface": "Plane",
+        "length": 0.22,
+        "slp_err": 1.868606333708957e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.3711641006893817e-09,
+        "hgt_err_user": null
+    },
+    "entry_062": {
+        "entry": 62,
+        "surface": "Elliptical",
+        "length": 0.09,
+        "slp_err": 5.14197963670995e-07,
+        "slp_err_user": null,
+        "hgt_err": 6.455609343875525e-10,
+        "hgt_err_user": null
+    },
+    "entry_063": {
+        "entry": 63,
+        "surface": "Elliptical",
+        "length": 0.047,
+        "slp_err": 9.053594456197332e-07,
+        "slp_err_user": null,
+        "hgt_err": 2.2424934768054024e-09,
+        "hgt_err_user": null
+    },
+    "entry_064": {
+        "entry": 64,
+        "surface": "Elliptical",
+        "length": 0.24,
+        "slp_err": 7.50359798876217e-07,
+        "slp_err_user": 7.7e-07,
+        "hgt_err": 1.965232706350355e-08,
+        "hgt_err_user": null
+    },
+    "entry_065": {
+        "entry": 65,
+        "surface": "Elliptical",
+        "length": 0.24,
+        "slp_err": 6.895581671770968e-07,
+        "slp_err_user": 7.7e-07,
+        "hgt_err": 1.7795271418078673e-08,
+        "hgt_err_user": null
+    },
+    "entry_066": {
+        "entry": 66,
+        "surface": "Elliptical",
+        "length": 0.48,
+        "slp_err": 1.774474345441214e-06,
+        "slp_err_user": 2.4e-06,
+        "hgt_err": 5.1570778813245175e-08,
+        "hgt_err_user": null
+    },
+    "entry_067": {
+        "entry": 67,
+        "surface": "Elliptical",
+        "length": 0.48,
+        "slp_err": 1.5328444941192913e-06,
+        "slp_err_user": 2.4e-06,
+        "hgt_err": 4.734341620623452e-08,
+        "hgt_err_user": null
+    },
+    "entry_068": {
+        "entry": 68,
+        "surface": "Elliptical",
+        "length": 0.48,
+        "slp_err": 1.5232218016842341e-06,
+        "slp_err_user": 2.4e-06,
+        "hgt_err": 3.5913842540474534e-08,
+        "hgt_err_user": null
+    },
+    "entry_069": {
+        "entry": 69,
+        "surface": "Elliptical",
+        "length": 0.24,
+        "slp_err": 4.501964623900151e-07,
+        "slp_err_user": 6.1e-07,
+        "hgt_err": 1.1564805704842746e-08,
+        "hgt_err_user": 1.87e-08
+    },
+    "entry_070": {
+        "entry": 70,
+        "surface": "Elliptical",
+        "length": 0.24,
+        "slp_err": 5.792613796754715e-07,
+        "slp_err_user": 4.6e-07,
+        "hgt_err": 1.5101425340322526e-08,
+        "hgt_err_user": 1.06e-08
+    },
+    "entry_071": {
+        "entry": 71,
+        "surface": "Plane",
+        "length": 0.9684600000000001,
+        "slp_err": 2.6151093503065425e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.45434114397021e-09,
+        "hgt_err_user": null
+    },
+    "entry_072": {
+        "entry": 72,
+        "surface": "Plane",
+        "length": 0.9684600000000001,
+        "slp_err": 3.0420633157172387e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.4300242292519835e-09,
+        "hgt_err_user": null
+    },
+    "entry_073": {
+        "entry": 73,
+        "surface": "Plane",
+        "length": 0.96825,
+        "slp_err": 2.0499882333917893e-07,
+        "slp_err_user": null,
+        "hgt_err": 3.5597770369467696e-09,
+        "hgt_err_user": null
+    },
+    "entry_074": {
+        "entry": 74,
+        "surface": "Plane",
+        "length": 0.96825,
+        "slp_err": 2.293054246725015e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.36371732551761e-09,
+        "hgt_err_user": null
+    },
+    "entry_075": {
+        "entry": 75,
+        "surface": "Plane",
+        "length": 0.972650148,
+        "slp_err": 2.688900018629591e-07,
+        "slp_err_user": null,
+        "hgt_err": 3.11346976996358e-09,
+        "hgt_err_user": null
+    },
+    "entry_076": {
+        "entry": 76,
+        "surface": "Plane",
+        "length": 0.972650148,
+        "slp_err": 2.2648055562967379e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.703316517164698e-09,
+        "hgt_err_user": null
+    },
+    "entry_077": {
+        "entry": 77,
+        "surface": "Plane",
+        "length": 0.972650148,
+        "slp_err": 2.6639089001160233e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.60300974976062e-09,
+        "hgt_err_user": null
+    },
+    "entry_078": {
+        "entry": 78,
+        "surface": "Plane",
+        "length": 0.972650148,
+        "slp_err": 1.9103544514619864e-07,
+        "slp_err_user": null,
+        "hgt_err": 4.574260452227919e-09,
+        "hgt_err_user": null
+    },
+    "entry_079": {
+        "entry": 79,
+        "surface": "cylindrical",
+        "length": 0.26999999,
+        "slp_err": 1.6161429972035259e-07,
+        "slp_err_user": 0.16,
+        "hgt_err": 1.2538090867136072e-09,
+        "hgt_err_user": 0.99
+    },
+    "entry_080": {
+        "entry": 80,
+        "surface": "cylindrical",
+        "length": 0.270000006,
+        "slp_err": 1.580493818435524e-07,
+        "slp_err_user": 0.16,
+        "hgt_err": 1.3417004088027762e-09,
+        "hgt_err_user": 0.99
+    },
+    "entry_081": {
+        "entry": 81,
+        "surface": "elliptical(detrended)",
+        "length": 0.17,
+        "slp_err": 5.857108780134828e-07,
+        "slp_err_user": null,
+        "hgt_err": 1.0382339001243516e-08,
+        "hgt_err_user": null
+    },
+    "entry_082": {
+        "entry": 82,
+        "surface": "elliptical(detrended)",
+        "length": 0.2,
+        "slp_err": 3.1192487029421625e-07,
+        "slp_err_user": null,
+        "hgt_err": 5.6030838356048025e-09,
+        "hgt_err_user": null
+    }
+}
